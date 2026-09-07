@@ -1,0 +1,197 @@
+{
+ "updated": "2026-09-07T12:56+02:00",
+ "total_stories": 45,
+ "total_sequences": 23,
+ "sequences": [
+  {
+   "rank": 1,
+   "date": "2026-09-05",
+   "label": "05/09/2026",
+   "from": "07:57",
+   "to": "09:54",
+   "replies": 14,
+   "reach": 2967,
+   "count": 2,
+   "stories": [
+    {
+     "id": "18164024452466862",
+     "type": "IMAGE",
+     "time": "07:57",
+     "replies": 14,
+     "reach": 2967,
+     "navigation": 2868,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3979285525973577180",
+     "img": "top/18164024452466862.jpg"
+    },
+    {
+     "id": "18190316431394233",
+     "type": "IMAGE",
+     "time": "09:54",
+     "replies": 0,
+     "reach": 1756,
+     "navigation": 2103,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3979344455365871655",
+     "img": "top/18190316431394233.jpg"
+    }
+   ]
+  },
+  {
+   "rank": 2,
+   "date": "2026-08-24",
+   "label": "24/08/2026",
+   "from": "10:27",
+   "to": "10:28",
+   "replies": 7,
+   "reach": 717,
+   "count": 4,
+   "stories": [
+    {
+     "id": "18240446617312134",
+     "type": "IMAGE",
+     "time": "10:27",
+     "replies": 0,
+     "reach": 717,
+     "navigation": 738,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3970663926575917640",
+     "img": "top/18240446617312134.jpg"
+    },
+    {
+     "id": "17985154818026620",
+     "type": "IMAGE",
+     "time": "10:27",
+     "replies": 0,
+     "reach": 635,
+     "navigation": 655,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3970664037666257522",
+     "img": "top/17985154818026620.jpg"
+    },
+    {
+     "id": "17943483744318228",
+     "type": "IMAGE",
+     "time": "10:27",
+     "replies": 3,
+     "reach": 593,
+     "navigation": 616,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3970664168771794195",
+     "img": "top/17943483744318228.jpg"
+    },
+    {
+     "id": "18196167622384938",
+     "type": "IMAGE",
+     "time": "10:28",
+     "replies": 4,
+     "reach": 569,
+     "navigation": 608,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3970664235259811399",
+     "img": "top/18196167622384938.jpg"
+    }
+   ]
+  },
+  {
+   "rank": 3,
+   "date": "2026-09-06",
+   "label": "06/09/2026",
+   "from": "17:01",
+   "to": "21:06",
+   "replies": 6,
+   "reach": 1312,
+   "count": 3,
+   "stories": [
+    {
+     "id": "18002186720789538",
+     "type": "VIDEO",
+     "time": "17:01",
+     "replies": 0,
+     "reach": 1312,
+     "navigation": 1404,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3980283981056479254",
+     "img": "top/18002186720789538.jpg"
+    },
+    {
+     "id": "18135815437619414",
+     "type": "IMAGE",
+     "time": "19:45",
+     "replies": 1,
+     "reach": 1098,
+     "navigation": 1228,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3980367006498183848",
+     "img": "top/18135815437619414.jpg"
+    },
+    {
+     "id": "18049639175648798",
+     "type": "IMAGE",
+     "time": "21:06",
+     "replies": 5,
+     "reach": 1001,
+     "navigation": 1144,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3980407823266772195",
+     "img": "top/18049639175648798.jpg"
+    }
+   ]
+  },
+  {
+   "rank": 4,
+   "date": "2026-08-31",
+   "label": "31/08/2026",
+   "from": "17:00",
+   "to": "19:24",
+   "replies": 5,
+   "reach": 2067,
+   "count": 3,
+   "stories": [
+    {
+     "id": "18621713284042685",
+     "type": "VIDEO",
+     "time": "17:00",
+     "replies": 1,
+     "reach": 2067,
+     "navigation": 2251,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3975935190320913305",
+     "img": "top/18621713284042685.jpg"
+    },
+    {
+     "id": "17946992358054575",
+     "type": "IMAGE",
+     "time": "19:07",
+     "replies": 1,
+     "reach": 1833,
+     "navigation": 1876,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3975999098481708715",
+     "img": "top/17946992358054575.jpg"
+    },
+    {
+     "id": "18002368713006021",
+     "type": "VIDEO",
+     "time": "19:24",
+     "replies": 3,
+     "reach": 1740,
+     "navigation": 1928,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3976007675082228719",
+     "img": null
+    }
+   ]
+  },
+  {
+   "rank": 5,
+   "date": "2026-08-28",
+   "label": "28/08/2026",
+   "from": "21:10",
+   "to": "21:10",
+   "replies": 4,
+   "reach": 1751,
+   "count": 1,
+   "stories": [
+    {
+     "id": "18018992195716386",
+     "type": "IMAGE",
+     "time": "21:10",
+     "replies": 4,
+     "reach": 1751,
+     "navigation": 1779,
+     "permalink": "https://www.instagram.com/stories/asiabaldoni/3973886591751080384",
+     "img": "top/18018992195716386.jpg"
+    }
+   ]
+  }
+ ]
+}

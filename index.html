@@ -132,6 +132,23 @@ kbd{font:600 10.5px Inter,sans-serif;background:rgba(255,255,255,.18);color:inhe
 .hist .t{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .hist .d{font-size:11.5px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
 
+/* reference */
+.seq{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.seq-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.seq-head .rank{font-size:18px;font-weight:700;color:var(--green-ink)}
+.seq-head .date{font-weight:600}
+.seq-head .kpi{color:var(--ink-3);font-size:12.5px;font-variant-numeric:tabular-nums}
+.seq-head .kpi b{color:var(--ink)}
+.seq-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.seq-strip .st{flex:none;width:118px;position:relative;border-radius:8px;overflow:hidden;background:#151515;aspect-ratio:9/16;cursor:pointer;border:2px solid transparent}
+.seq-strip .st:hover{border-color:var(--green)}
+.seq-strip .st img{width:100%;height:100%;object-fit:cover;display:block}
+.seq-strip .st .rep{position:absolute;top:6px;right:6px;background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px}
+.seq-strip .st .rep.zero{background:rgba(0,0,0,.55)}
+.seq-strip .st .tm{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;border-radius:5px;padding:2px 5px;font-variant-numeric:tabular-nums}
+.seq-strip .st .vid{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;border-radius:5px;padding:2px 5px}
+.seq-strip .st .noimg{position:absolute;inset:0;display:grid;place-items:center;color:#888;font-size:11px;text-align:center;padding:8px}
+
 /* picker + viewer */
 .modal{position:fixed;inset:0;background:rgba(20,23,22,.7);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
 .modal.open{display:flex}
@@ -171,6 +188,7 @@ kbd{font:600 10.5px Inter,sans-serif;background:rgba(255,255,255,.18);color:inhe
     <a href="#s-foto"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg><span>Foto</span></a>
     <a href="#s-storie"><svg class="i" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span>Storie</span></a>
     <a href="#s-storico"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Storico</span></a>
+    <a href="#s-ref"><svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 3h12v5a6 6 0 0 1-12 0zM6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/></svg><span>Reference</span></a>
   </nav>
   <div class="spacer"></div>
   <div class="who">Asia Baldoni</div>
@@ -241,6 +259,11 @@ Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati!
     <div class="sec"><div class="tile"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><h2>Storico</h2><div class="sub">Ogni impaginazione resta qui. Tocca per riaprirla e modificarla.</div></div>
       <button class="btn sm" id="btn-clear-hist" style="margin-left:auto">Svuota</button></div>
     <div class="panel"><ul id="hist"></ul></div>
+  </section>
+
+  <section id="s-ref">
+    <div class="sec"><div class="tile"><svg class="i" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 3h12v5a6 6 0 0 1-12 0zM6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/></svg></div><div><h2>Reference: le 5 sequenze con più risposte</h2><div class="sub" id="ref-sub">Dai dati Instagram (Graph API), aggiornati ogni giorno. Guarda come sono impaginate: foto, quantità di testo, posizione, CTA.</div></div></div>
+    <div id="ref"></div>
   </section>
 </div></main>
 </div>
@@ -737,6 +760,33 @@ function restore(it){
   $('#cards').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
+/* ---------- reference: top sequenze per risposte ---------- */
+async function loadReference(){
+  const host = $('#ref');
+  let data = null;
+  try { const r = await fetch('top/top-stories.json', {cache: 'no-store'}); if (r.ok) data = await r.json(); } catch(e){}
+  if (!data || !data.sequences || !data.sequences.length){
+    host.innerHTML = '<div class="panel empty">I dati delle stories non sono raggiungibili da qui. Apri il tool dal sito (giulioat.github.io/storie-abf) per vedere le 5 sequenze migliori.</div>';
+    return;
+  }
+  $('#ref-sub').textContent = `Dati Instagram (Graph API) su ${data.total_stories} storie in ${data.total_sequences} sequenze. Aggiornato ${data.updated.slice(0, 16).replace('T', ' ')}. Guarda come sono impaginate: foto, quantità di testo, posizione, CTA.`;
+  host.innerHTML = data.sequences.map(sq => `
+    <div class="seq">
+      <div class="seq-head"><span class="rank">#${sq.rank}</span><span class="date">${sq.label}</span><span class="kpi">${sq.from}–${sq.to} · ${sq.count} storie · <b>${sq.replies} risposte</b> · reach max ${sq.reach.toLocaleString('it-IT')}</span></div>
+      <div class="seq-strip">${sq.stories.map(st => `
+        <div class="st" data-img="${st.img || ''}" data-link="${st.permalink || ''}" title="${st.time} · ${st.replies} risposte · reach ${st.reach}">
+          ${st.img ? `<img src="${st.img}" alt="Storia delle ${st.time}" loading="lazy">` : '<div class="noimg">media non disponibile</div>'}
+          ${st.type === 'VIDEO' ? '<span class="vid">VIDEO</span>' : ''}
+          <span class="rep ${st.replies ? '' : 'zero'}">${st.replies} ✉</span><span class="tm">${st.time}</span>
+        </div>`).join('')}</div>
+    </div>`).join('');
+  host.querySelectorAll('.st').forEach(el => el.onclick = () => {
+    if (!el.dataset.img) return;
+    const img = $('#viewer-img'); img.src = el.dataset.img; img.removeAttribute('data-url');
+    $('#viewer-title').textContent = el.title; $('#viewer').classList.add('open');
+  });
+}
+
 /* ---------- ui wiring ---------- */
 function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
 $('#btn-layout').onclick = layout;
@@ -766,7 +816,7 @@ let rT = null; window.addEventListener('resize', () => { clearTimeout(rT); rT = 
   try { if (navigator.canShare && navigator.canShare({files: [new File([new Blob(['x'])], 'x.jpg', {type: 'image/jpeg'})]})) { canShareFiles = true; $('#btn-share').hidden = false; } } catch(e){}
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); } catch(e){}
   await loadPhotos().catch(e => { console.warn(e); toast('Libreria foto non disponibile in questo browser'); });
-  renderHist();
+  renderHist(); loadReference();
   const cur = lsGet('abf-current', null);
   if (cur && cur.stories && cur.stories.length) restore(cur);
   if (document.fonts && document.fonts.load){ Promise.all(Object.values(FONTS).map(f => document.fonts.load(`${f.w} 40px ${f.css}`).catch(()=>{}))).then(() => stories.forEach(s => s._paint && s._paint())); }
