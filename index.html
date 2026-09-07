@@ -109,7 +109,15 @@ kbd{font:600 10.5px Inter,sans-serif;background:rgba(255,255,255,.18);color:inhe
 .card .noph{position:absolute;inset:0;display:grid;place-items:center;color:#bbb;font-size:12.5px;text-align:center;padding:20px}
 .card .body{padding:10px;display:flex;flex-direction:column;gap:8px}
 .card textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel);font-size:12.5px;line-height:1.4}
+.card .blk{border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.card .blk.on{border-color:var(--green);background:var(--mint-tint)}
+.card .blk-head{display:flex;justify-content:space-between;align-items:center}
+.card .blk-head .icon{width:24px;height:24px;font-size:11px}
 .card .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.card .row.sw{gap:4px}
+.swatch{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.18);padding:0;cursor:pointer;flex:none}
+.swatch.none{background:var(--panel);color:var(--ink-2);font-size:10px;line-height:18px}
+.swatch:hover{transform:scale(1.15)}
 .card .row select,.card .row input[type=range]{flex:1;min-width:0}
 .card select{border:1px solid var(--line);border-radius:7px;padding:5px 6px;background:var(--panel);font-size:12px}
 .card input[type=range]{accent-color:var(--green)}
@@ -184,10 +192,11 @@ kbd{font:600 10.5px Inter,sans-serif;background:rgba(255,255,255,.18);color:inhe
     <div class="panel" id="s-copy">
       <h2>Copy</h2>
       <p class="hint">Scrivi come parli a lei. Il tool pensa al resto.</p>
-      <div class="callout">Una <b>riga vuota</b> = nuova storia. Dentro un paragrafo il testo viene spezzato per frasi. Metti una parola tra asterischi (<b>*così*</b>) per farla <b style="color:var(--rosa-ink)">rosa</b>.</div>
+      <div class="callout">Una <b>riga vuota</b> = nuova storia. Dentro un paragrafo il testo viene spezzato per frasi. Metti una parola tra asterischi (<b>*così*</b>) per farla <b style="color:var(--rosa-ink)">rosa</b>. Una riga che inizia con <b>+</b> diventa un blocco di testo in più nella stessa storia (es. la CTA sotto). Sotto ogni blocco: seleziona le parole e tocca un colore, oppure "Spezza qui" per dividerlo in due blocchi.</div>
       <textarea id="copy" placeholder="Buongiorno! Oggi ho un tempo risicato per allenarmi, ma meglio farlo così piuttosto che saltare.
 
-Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati! Rispondi a questa storia con INFO per candidarti."></textarea>
+Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati!
++ Rispondi a questa storia con INFO per candidarti."></textarea>
       <div class="controls">
         <div class="field"><span class="label">Frasi per storia</span>
           <select id="per-story"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="0">tutto il paragrafo</option></select></div>
@@ -256,7 +265,7 @@ Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati! Rispondi a questa st
 <ol style="padding-left:18px;line-height:1.7;margin:0">
 <li><strong>Foto.</strong> Carica una volta le tue foto verticali: restano salvate nel browser di questo dispositivo (non vanno online). Più ne hai, più le storie variano.</li>
 <li><strong>Copy.</strong> Scrivi o incolla il testo. Una riga vuota separa le storie. Dentro un paragrafo, ogni 2 frasi (o quante scegli) nasce una storia. Parola tra <code>*asterischi*</code> = rosa.</li>
-<li><strong>Impagina.</strong> Il testo finisce sulle foto in riquadri bianchi, come lo fai a mano su Instagram. Trascina il testo sulla foto per spostarlo. Sotto ogni storia cambi testo, dimensione, stile e foto.</li>
+<li><strong>Impagina.</strong> Il testo finisce sulle foto in riquadri bianchi, come lo fai a mano su Instagram. Trascina il testo sulla foto per spostarlo. Sotto ogni storia cambi testo, dimensione, stile, font e foto. Con "+ Blocco di testo" aggiungi altri riquadri alla stessa storia, ognuno trascinabile da solo; nel copy, una riga che inizia con <code>+</code> crea già un blocco in più. Per colorare una o più parole: selezionale nel testo del blocco e tocca un cerchietto colore (✕ toglie il colore). "Spezza qui" divide il blocco in due dove sta il cursore, come quando su Instagram vai a capo. L'invio dentro un blocco manda a capo la riga.</li>
 <li><strong>Scarica.</strong> "Scarica tutte" salva le immagini 1080×1920 una alla volta. Da telefono usa "Condividi" per mandarle dritte su Instagram.</li>
 </ol>
 <div style="margin-top:12px;text-align:right"><button class="btn sm" id="help-close">Ok</button></div></div></div>
@@ -400,27 +409,35 @@ function splitSentences(par){
   }
   return out;
 }
+function newBlock(text, y, opts){ return {id: uid(), text, x: 0.5, y, size: opts.size, style: opts.style, font: opts.font}; }
 function layout(){
   const copy = $('#copy').value.trim();
   if (!copy){ toast('Scrivi prima il copy'); return; }
   const per = parseInt($('#per-story').value, 10);
-  const size = parseInt($('#base-size').value, 10) || 52;
-  const style = $('#base-style').value;
+  const opts = {size: parseInt($('#base-size').value, 10) || 52, style: $('#base-style').value, font: $('#base-font').value};
   const y = parseFloat($('#base-pos').value);
-  const texts = [];
+  const built = []; // [{blocks:[text,...]}]
   for (const par of copy.split(/\n\s*\n/)){
-    const s = splitSentences(par);
-    if (!s.length) continue;
-    if (per === 0){ texts.push(s.join(' ')); continue; }
-    for (let i = 0; i < s.length; i += per) texts.push(s.slice(i, i + per).join(' '));
+    const main = [], extra = [];
+    for (const ln of par.split('\n')){ const t = ln.trim(); if (!t) continue; if (/^\+\s*/.test(t)) extra.push(t.replace(/^\+\s*/, '')); else main.push(t); }
+    const sents = splitSentences(main.join('\n'));
+    const texts = [];
+    if (sents.length){ if (per === 0) texts.push(sents.join(' ')); else for (let i = 0; i < sents.length; i += per) texts.push(sents.slice(i, i + per).join(' ')); }
+    if (!texts.length && extra.length) texts.push(extra.shift());
+    texts.forEach((t, i) => built.push({texts: i === texts.length - 1 ? [t, ...extra] : [t]}));
   }
-  const pool = pickPhotos(texts.length);
-  const font = $('#base-font').value;
-  stories = texts.map((text, i) => ({id: uid(), text, photoId: pool[i] || null, x: 0.5, y, size, style, font}));
+  const pool = pickPhotos(built.length);
+  stories = built.map((b, i) => ({id: uid(), photoId: pool[i] || null, blocks: b.texts.map((t, k) => newBlock(t, k === 0 ? y : clamp(y + 0.16 * k, 0.08, 0.92), opts))}));
   currentId = uid();
   renderCards(); saveToHistory(); autosave();
   $('#cards').scrollIntoView({behavior:'smooth', block:'start'});
 }
+function normStory(s){
+  if (s.blocks) return s;
+  const {text, x, y, size, style, font, ...rest} = s;
+  return {...rest, blocks: [{id: uid(), text: text || '', x: x ?? 0.5, y: y ?? 0.5, size: size || 52, style: style || 'white', font: font || DEFAULT_FONT}]};
+}
+
 function pickPhotos(n){
   const arr = [...photos.values()];
   if (!arr.length) return [];
@@ -441,18 +458,25 @@ function shuffle(){
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 /* ---------- rendering (shared by preview and export) ---------- */
-function tokenize(text){
-  // *word* -> highlighted
-  const toks = []; let hl = false;
-  for (const seg of text.split('*')){
-    if (seg) for (const w of seg.split(/\s+/)) if (w) toks.push({w, hl});
-    hl = !hl;
+const SWATCHES = [['#d63d7a','Rosa'],['#e5322d','Rosso'],['#f28c28','Arancio'],['#f1dc00','Giallo'],['#3ab795','Verde'],['#3aa0e0','Azzurro'],['#2b4fd8','Blu'],['#8e44ad','Viola'],['#ffffff','Bianco'],['#111111','Nero']];
+const TAG_RE = /\[c=([^\]]+)\]([\s\S]*?)\[\/c\]/g;
+function tokenize(text, hl){
+  // [c=#hex]parole[/c] -> colore scelto · *parola* -> colore evidenziazione dello stile · \n -> a capo forzato
+  const toks = [];
+  const re = /\[c=([^\]]+)\]([\s\S]*?)\[\/c\]|\*([^*\n]+)\*|(\n)|(\S+)/g;
+  let m;
+  while ((m = re.exec(text))){
+    if (m[1] !== undefined){ for (const w of m[2].split(/\s+/)) if (w) toks.push({w, color: m[1]}); }
+    else if (m[3] !== undefined){ for (const w of m[3].split(/\s+/)) if (w) toks.push({w, color: hl}); }
+    else if (m[4] !== undefined) toks.push({br: true});
+    else toks.push({w: m[5]});
   }
   return toks;
 }
 function wrapLines(ctx, toks, maxW){
   const lines = []; let cur = []; let curW = 0; const sp = ctx.measureText(' ').width;
   for (const t of toks){
+    if (t.br){ lines.push(cur); cur = []; curW = 0; continue; }
     const w = ctx.measureText(t.w).width;
     if (cur.length && curW + sp + w > maxW){ lines.push(cur); cur = [t]; curW = w; }
     else { curW += cur.length ? sp + w : w; cur.push(t); }
@@ -460,7 +484,7 @@ function wrapLines(ctx, toks, maxW){
   if (cur.length) lines.push(cur);
   return lines;
 }
-function draw(ctx, s, cw, ch){
+function draw(ctx, s, cw, ch, sel){
   const k = cw / W; // scale from 1080 base
   ctx.save(); ctx.scale(k, k);
   ctx.fillStyle = '#151515'; ctx.fillRect(0, 0, W, H);
@@ -470,48 +494,69 @@ function draw(ctx, s, cw, ch){
     const dw = im.naturalWidth * r, dh = im.naturalHeight * r;
     ctx.drawImage(im, (W - dw) / 2, (H - dh) / 2, dw, dh);
   }
-  const st = STYLE[s.style] || STYLE.white;
-  const fs = s.size;
-  const ff = fontOf(s); ctx.font = `${ff.w} ${fs}px ${ff.css}`; ctx.textBaseline = 'middle';
-  const padX = fs * 0.42, padY = fs * 0.22, lh = fs * 1.42, rad = fs * 0.28;
-  const lines = wrapLines(ctx, tokenize(s.text), W * 0.82 - padX * 2);
-  const totalH = lines.length * lh;
-  const cx = s.x * W, top = s.y * H - totalH / 2;
-  if (!st.box){ ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = fs * 0.35; }
-  lines.forEach((ln, i) => {
-    const sp = ctx.measureText(' ').width;
-    const ws = ln.map(t => ctx.measureText(t.w).width);
-    const lw = ws.reduce((a, b) => a + b, 0) + sp * (ln.length - 1);
-    const yc = top + i * lh + lh / 2;
-    if (st.box){
-      ctx.fillStyle = st.box;
-      rrect(ctx, cx - lw / 2 - padX, yc - lh / 2 - padY + (lh - fs) / 2 - fs * 0.02, lw + padX * 2, fs + padY * 2, rad);
-      ctx.fill();
+  const bounds = [];
+  s.blocks.forEach((bl, bi) => {
+    ctx.save();
+    const st = STYLE[bl.style] || STYLE.white;
+    const fs = bl.size;
+    const ff = fontOf(bl); ctx.font = `${ff.w} ${fs}px ${ff.css}`; ctx.textBaseline = 'middle';
+    const padX = fs * 0.42, padY = fs * 0.22, lh = fs * 1.42, rad = fs * 0.28;
+    const lines = wrapLines(ctx, tokenize(bl.text, st.hl), W * 0.82 - padX * 2).filter(l => l.length);
+    const totalH = lines.length * lh;
+    const cx = bl.x * W, top = bl.y * H - totalH / 2;
+    let maxW = 0;
+    if (!st.box){ ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = fs * 0.35; }
+    lines.forEach((ln, i) => {
+      const sp = ctx.measureText(' ').width;
+      const ws = ln.map(t => ctx.measureText(t.w).width);
+      const lw = ws.reduce((a, b) => a + b, 0) + sp * (ln.length - 1);
+      maxW = Math.max(maxW, lw + padX * 2);
+      const yc = top + i * lh + lh / 2;
+      if (st.box){
+        ctx.fillStyle = st.box;
+        rrect(ctx, cx - lw / 2 - padX, yc - lh / 2 - padY + (lh - fs) / 2 - fs * 0.02, lw + padX * 2, fs + padY * 2, rad);
+        ctx.fill();
+      }
+      let x = cx - lw / 2;
+      ln.forEach((t, j) => { ctx.fillStyle = t.color || st.ink; ctx.fillText(t.w, x, yc); x += ws[j] + sp; });
+    });
+    ctx.restore();
+    const bx = {x0: (cx - maxW / 2) / W, x1: (cx + maxW / 2) / W, y0: (top - padY) / H, y1: (top + totalH + padY) / H};
+    bounds.push(bx);
+    if (sel === bi && s.blocks.length > 1){
+      ctx.save(); ctx.strokeStyle = '#3fa583'; ctx.lineWidth = 4; ctx.setLineDash([14, 10]);
+      ctx.strokeRect(bx.x0 * W - 10, bx.y0 * H - 10, (bx.x1 - bx.x0) * W + 20, (bx.y1 - bx.y0) * H + 20); ctx.restore();
     }
-    let x = cx - lw / 2;
-    ln.forEach((t, j) => { ctx.fillStyle = t.hl ? st.hl : st.ink; ctx.fillText(t.w, x, yc); x += ws[j] + sp; });
   });
   ctx.restore();
-  return {top: top / H, bottom: (top + totalH) / H};
+  return bounds;
 }
+
 function rrect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
 /* ---------- cards ---------- */
 function renderCards(){
   const host = $('#cards'); host.innerHTML = '';
-  $('#meta').textContent = stories.length ? `${stories.length} storie · ${photos.size} foto in libreria · trascina il testo per spostarlo` : 'Impagina un copy per iniziare.';
+  $('#meta').textContent = stories.length ? `${stories.length} storie · ${photos.size} foto in libreria · trascina ogni blocco di testo per spostarlo` : 'Impagina un copy per iniziare.';
   $('#btn-download').disabled = !stories.length; $('#btn-shuffle').disabled = !stories.length;
   stories.forEach((s, i) => {
     const c = document.createElement('div'); c.className = 'card';
+    const blocksHtml = s.blocks.map((bl, bi) => `
+      <div class="blk" data-b="${bi}">
+        <div class="blk-head"><span class="label">Blocco ${bi + 1}</span>${s.blocks.length > 1 ? `<button class="icon danger" data-bdel="${bi}" title="Elimina blocco" aria-label="Elimina blocco">✕</button>` : ''}</div>
+        <textarea aria-label="Testo blocco ${bi + 1} storia ${i + 1}">${esc(bl.text)}</textarea>
+        <div class="row sw" title="Seleziona le parole nel testo, poi tocca un colore">${SWATCHES.map(([h, n]) => `<button class="swatch" data-c="${h}" style="background:${h}" title="${n}" aria-label="Colora di ${n.toLowerCase()}"></button>`).join('')}<button class="swatch none" data-c="" title="Togli colore" aria-label="Togli colore">✕</button><span style="flex:1"></span><button class="btn sm" data-split="1" title="Divide il blocco in due dove sta il cursore">Spezza qui</button></div>
+        <div class="row">
+          <input type="range" min="24" max="90" step="2" value="${bl.size}" aria-label="Dimensione testo">
+          <select class="style" aria-label="Stile">${Object.keys(STYLE).map(k => `<option value="${k}" ${k === bl.style ? 'selected' : ''}>${({white:'Bianco',black:'Nero',rosa:'Rosa',plain:'Solo testo'})[k]}</option>`).join('')}</select>
+        </div>
+        <div class="row"><select class="font" aria-label="Font">${Object.keys(FONTS).map(k => `<option value="${k}" ${k === (bl.font || DEFAULT_FONT) ? 'selected' : ''}>${FONTS[k].label}</option>`).join('')}</select></div>
+      </div>`).join('');
     c.innerHTML = `
       <div class="stage"><canvas></canvas><span class="num">STORIA ${i + 1}</span>${s.photoId ? '' : '<div class="noph">Nessuna foto: tocca una foto nella libreria o "Cambia foto"</div>'}</div>
       <div class="body">
-        <textarea aria-label="Testo storia ${i + 1}">${esc(s.text)}</textarea>
-        <div class="row">
-          <input type="range" min="24" max="90" step="2" value="${s.size}" aria-label="Dimensione testo">
-          <select aria-label="Stile">${Object.keys(STYLE).map(k => `<option value="${k}" ${k === s.style ? 'selected' : ''}>${({white:'Bianco',black:'Nero',rosa:'Rosa',plain:'Solo testo'})[k]}</option>`).join('')}</select>
-        </div>
-        <div class="row"><select class="font" aria-label="Font">${Object.keys(FONTS).map(k => `<option value="${k}" ${k === (s.font || DEFAULT_FONT) ? 'selected' : ''}>${FONTS[k].label}</option>`).join('')}</select></div>
+        ${blocksHtml}
+        <button class="btn sm" data-a="addblk" style="align-self:flex-start">+ Blocco di testo</button>
         <div class="row">
           <button class="btn sm" data-a="photo">Cambia foto</button>
           <button class="btn sm" data-a="one">Salva</button>
@@ -523,16 +568,54 @@ function renderCards(){
         </div>
       </div>`;
     const cv = c.querySelector('canvas');
-    const paint = () => { const r = cv.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.width * dpr * 16 / 9); draw(cv.getContext('2d'), s, cv.width, cv.height); };
-    c.querySelector('textarea').addEventListener('input', e => { s.text = e.target.value; paint(); autosaveSoon(); });
-    c.querySelector('input[type=range]').addEventListener('input', e => { s.size = +e.target.value; paint(); autosaveSoon(); });
-    c.querySelector('select:not(.font)').addEventListener('change', e => { s.style = e.target.value; paint(); autosaveSoon(); });
-    c.querySelector('select.font').addEventListener('change', e => { s.font = e.target.value; paint(); autosaveSoon(); });
+    let sel = s.blocks.length > 1 ? 0 : -1, bounds = [];
+    const paint = () => { const r = cv.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.width * dpr * 16 / 9); bounds = draw(cv.getContext('2d'), s, cv.width, cv.height, sel); };
+    const setSel = bi => { sel = bi; c.querySelectorAll('.blk').forEach(el => el.classList.toggle('on', +el.dataset.b === bi && s.blocks.length > 1)); paint(); };
+    c.querySelectorAll('.blk').forEach(el => {
+      const bl = s.blocks[+el.dataset.b];
+      el.querySelector('textarea').addEventListener('input', e => { bl.text = e.target.value; paint(); autosaveSoon(); });
+      el.querySelector('textarea').addEventListener('focus', () => setSel(+el.dataset.b));
+      el.querySelector('input[type=range]').addEventListener('input', e => { bl.size = +e.target.value; paint(); autosaveSoon(); });
+      el.querySelector('select.style').addEventListener('change', e => { bl.style = e.target.value; paint(); autosaveSoon(); });
+      el.querySelector('select.font').addEventListener('change', e => { bl.font = e.target.value; paint(); autosaveSoon(); });
+      const del = el.querySelector('[data-bdel]'); if (del) del.onclick = () => { s.blocks.splice(+el.dataset.b, 1); renderCards(); autosave(); };
+      const ta = el.querySelector('textarea');
+      el.querySelectorAll('.swatch').forEach(sw => sw.addEventListener('pointerdown', e => e.preventDefault()));
+      el.querySelectorAll('.swatch').forEach(sw => sw.onclick = () => {
+        const a = ta.selectionStart, b = ta.selectionEnd;
+        if (a === b){ toast('Seleziona prima le parole da colorare'); ta.focus(); return; }
+        const inner = ta.value.slice(a, b).replace(TAG_RE, '$2').replace(/\*/g, '');
+        const wrapped = sw.dataset.c ? `[c=${sw.dataset.c}]${inner}[/c]` : inner;
+        ta.value = ta.value.slice(0, a) + wrapped + ta.value.slice(b);
+        bl.text = ta.value; ta.focus(); ta.setSelectionRange(a, a + wrapped.length); paint(); autosaveSoon();
+      });
+      el.querySelector('[data-split]').addEventListener('pointerdown', e => e.preventDefault());
+      el.querySelector('[data-split]').onclick = () => {
+        const at = ta.selectionStart, t = ta.value;
+        if (at <= 0 || at >= t.length){ toast('Metti il cursore nel punto in cui spezzare'); ta.focus(); return; }
+        let before = t.slice(0, at).trim(), after = t.slice(at).trim();
+        const open = (before.match(/\[c=[^\]]+\]/g) || []).length, close = (before.match(/\[\/c\]/g) || []).length;
+        if (open > close){ const tag = before.match(/\[c=[^\]]+\](?![\s\S]*\[\/c\])/); before += '[/c]'; after = tag[0] + after; }
+        if (!before || !after){ toast('Metti il cursore tra due parole'); return; }
+        const bi2 = +el.dataset.b; bl.text = before;
+        s.blocks.splice(bi2 + 1, 0, {...bl, id: uid(), text: after, y: clamp(bl.y + 0.12, 0.04, 0.96)});
+        renderCards(); autosave(); toast('Blocco spezzato in due');
+      };
+    });
     c.querySelectorAll('[data-a]').forEach(b => b.onclick = () => action(b.dataset.a, i));
-    // drag text
+    setSel(sel);
+    // drag: pick the block under the finger, else the nearest one
     let drag = null;
-    cv.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, sx: s.x, sy: s.y}; cv.setPointerCapture(e.pointerId); cv.classList.add('dragging'); });
-    cv.addEventListener('pointermove', e => { if (!drag) return; const r = cv.getBoundingClientRect(); s.x = clamp(drag.sx + (e.clientX - drag.x) / r.width, 0.15, 0.85); s.y = clamp(drag.sy + (e.clientY - drag.y) / r.height, 0.06, 0.94); paint(); });
+    cv.addEventListener('pointerdown', e => {
+      const r = cv.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      let bi = -1;
+      for (let k = bounds.length - 1; k >= 0; k--){ const b = bounds[k]; if (px >= b.x0 - 0.03 && px <= b.x1 + 0.03 && py >= b.y0 - 0.02 && py <= b.y1 + 0.02){ bi = k; break; } }
+      if (bi < 0){ let best = 1e9; s.blocks.forEach((bl, k) => { const d = Math.hypot((bl.x - px) * 9, (bl.y - py) * 16); if (d < best){ best = d; bi = k; } }); }
+      if (bi < 0) return;
+      const bl = s.blocks[bi]; drag = {bl, x: e.clientX, y: e.clientY, sx: bl.x, sy: bl.y};
+      setSel(bi); cv.setPointerCapture(e.pointerId); cv.classList.add('dragging');
+    });
+    cv.addEventListener('pointermove', e => { if (!drag) return; const r = cv.getBoundingClientRect(); drag.bl.x = clamp(drag.sx + (e.clientX - drag.x) / r.width, 0.15, 0.85); drag.bl.y = clamp(drag.sy + (e.clientY - drag.y) / r.height, 0.04, 0.96); paint(); });
     const end = () => { if (drag){ drag = null; cv.classList.remove('dragging'); autosaveSoon(); } };
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     host.appendChild(c);
@@ -549,11 +632,13 @@ function action(a, i){
   if (a === 'del'){ stories.splice(i, 1); }
   else if (a === 'up' && i > 0){ [stories[i-1], stories[i]] = [stories[i], stories[i-1]]; }
   else if (a === 'down' && i < stories.length - 1){ [stories[i+1], stories[i]] = [stories[i], stories[i+1]]; }
-  else if (a === 'dup'){ stories.splice(i + 1, 0, {...s, id: uid()}); }
+  else if (a === 'dup'){ stories.splice(i + 1, 0, {...s, id: uid(), blocks: s.blocks.map(b => ({...b, id: uid()}))}); }
+  else if (a === 'addblk'){ const last = s.blocks[s.blocks.length - 1]; s.blocks.push({id: uid(), text: 'Nuovo blocco', x: 0.5, y: clamp((last ? last.y : 0.5) + 0.16, 0.08, 0.92), size: last ? last.size : 52, style: last ? last.style : 'white', font: last ? last.font : DEFAULT_FONT}); }
   else if (a === 'photo'){ openPicker(s); return; }
   else if (a === 'one'){ exportOne(s, i); return; }
   renderCards(); autosave();
 }
+
 function openPicker(s){
   const g = $('#pick-grid'); g.innerHTML = '';
   const arr = [...photos.values()].sort((a,b) => b.added - a.added);
@@ -623,7 +708,7 @@ function showViewer(f){
 }
 
 /* ---------- history / autosave ---------- */
-function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(({id, text, photoId, x, y, size, style, font}) => ({id, text, photoId, x, y, size, style, font}))}; }
+function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(st => ({id: st.id, photoId: st.photoId, blocks: st.blocks.map(({id, text, x, y, size, style, font}) => ({id, text, x, y, size, style, font}))}))}; }
 function saveToHistory(){
   if (!stories.length) return;
   const h = lsGet('abf-hist', []).filter(x => x.id !== currentId);
@@ -638,7 +723,7 @@ function renderHist(){
   if (!h.length){ ul.innerHTML = '<li style="cursor:default;color:var(--ink-3)">Ancora niente. La prima impaginazione comparirà qui.</li>'; return; }
   for (const it of h){
     const li = document.createElement('li');
-    const first = (it.stories[0] && it.stories[0].text) || it.copy || '';
+    const s0 = it.stories[0]; const first = (s0 && (s0.blocks ? (s0.blocks[0] && s0.blocks[0].text) : s0.text)) || it.copy || '';
     li.innerHTML = `<span class="t">${esc(first.slice(0, 90))}</span><span class="d">${it.stories.length} storie · ${new Date(it.date).toLocaleDateString('it-IT', {day:'2-digit', month:'short'})} ${new Date(it.date).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</span>`;
     li.onclick = () => restore(it);
     ul.appendChild(li);
@@ -646,7 +731,7 @@ function renderHist(){
 }
 function restore(it){
   currentId = it.id; $('#copy').value = it.copy || '';
-  stories = it.stories.map(s => ({...s, photoId: photos.has(s.photoId) ? s.photoId : null}));
+  stories = it.stories.map(s => ({...normStory(s), photoId: photos.has(s.photoId) ? s.photoId : null}));
   renderCards(); lsSet('abf-current', snapshot());
   $('#cards').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
@@ -658,7 +743,7 @@ $('#copy').addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.
 $('#btn-shuffle').onclick = shuffle;
 $('#btn-download').onclick = exportAll;
 $('#btn-share').onclick = async () => { const files = []; for (let i = 0; i < stories.length; i++) files.push({blob: await renderFull(stories[i]), name: fname(i)}); await shareFiles(files); };
-$('#btn-add-story').onclick = () => { const size = parseInt($('#base-size').value, 10) || 44; if (!currentId) currentId = uid(); stories.push({id: uid(), text: 'Nuova storia', photoId: pickPhotos(1)[0] || null, x: 0.5, y: 0.5, size, style: $('#base-style').value, font: $('#base-font').value}); renderCards(); autosave(); };
+$('#btn-add-story').onclick = () => { const size = parseInt($('#base-size').value, 10) || 44; if (!currentId) currentId = uid(); stories.push({id: uid(), photoId: pickPhotos(1)[0] || null, blocks: [{id: uid(), text: 'Nuova storia', x: 0.5, y: 0.5, size, style: $('#base-style').value, font: $('#base-font').value}]}); renderCards(); autosave(); };
 $('#btn-add').onclick = () => $('#file').click();
 $('#drop').onclick = () => $('#file').click();
 $('#file').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
@@ -678,6 +763,7 @@ let rT = null; window.addEventListener('resize', () => { clearTimeout(rT); rT = 
 /* ---------- boot ---------- */
 (async () => {
   try { if (navigator.canShare && navigator.canShare({files: [new File([new Blob(['x'])], 'x.jpg', {type: 'image/jpeg'})]})) { canShareFiles = true; $('#btn-share').hidden = false; } } catch(e){}
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); } catch(e){}
   await loadPhotos().catch(e => { console.warn(e); toast('Libreria foto non disponibile in questo browser'); });
   renderHist();
   const cur = lsGet('abf-current', null);
