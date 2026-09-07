@@ -598,6 +598,7 @@ function renderCards(){
         if (open > close){ const tag = before.match(/\[c=[^\]]+\](?![\s\S]*\[\/c\])/); before += '[/c]'; after = tag[0] + after; }
         if (!before || !after){ toast('Metti il cursore tra due parole'); return; }
         const bi2 = +el.dataset.b; bl.text = before;
+        s.blocks.slice(bi2 + 1).forEach(b => { b.y = clamp(b.y + 0.12, 0.04, 0.96); });
         s.blocks.splice(bi2 + 1, 0, {...bl, id: uid(), text: after, y: clamp(bl.y + 0.12, 0.04, 0.96)});
         renderCards(); autosave(); toast('Blocco spezzato in due');
       };
