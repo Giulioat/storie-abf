@@ -1,0 +1,602 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Storie ABF"><meta name="theme-color" content="#fbf8f6"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23ffc1c1%22/><rect x=%2228%22 y=%2216%22 width=%2244%22 height=%2268%22 rx=%228%22 fill=%22%232B2622%22/></svg>"><style>img{max-width:100%}[hidden]{display:none!important}</style></head><body style="margin:0"><title>Impaginatore Storie ABF</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&family=Lora:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#fbf8f6; --panel:#ffffff; --ink:#2B2622; --ink-2:#6b625c; --ink-3:#a39a94;
+  --line:#e9e1dc; --line-2:#d9cfc8;
+  --rosa:#ffc1c1; --rosa-soft:#ffeded; --rosa-ink:#c8467a; --verde:#3ab795; --verde-ink:#1f7f66; --giallo:#F1DC00;
+  --btn:#2B2622; --btn-ink:#ffffff; --focus:#3ab795;
+  --shadow:0 10px 30px rgba(43,38,34,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1816; --panel:#242020; --ink:#f3ede9; --ink-2:#c1b6ae; --ink-3:#7d736d;
+    --line:#352f2c; --line-2:#463e3a; --rosa-soft:#3a2a2d; --rosa-ink:#ff9ec0; --verde-ink:#5fd3b0;
+    --btn:#f3ede9; --btn-ink:#1b1816; --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1816; --panel:#242020; --ink:#f3ede9; --ink-2:#c1b6ae; --ink-3:#7d736d;
+  --line:#352f2c; --line-2:#463e3a; --rosa-soft:#3a2a2d; --rosa-ink:#ff9ec0; --verde-ink:#5fd3b0;
+  --btn:#f3ede9; --btn-ink:#1b1816; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-family:Fraunces,Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.01em;text-wrap:balance}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 18px 80px}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px}
+header.top h1{font-size:30px}
+header.top h1 em{font-style:italic;color:var(--rosa-ink)}
+.sub{color:var(--ink-2);font-size:14px;max-width:62ch}
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);font-weight:700}
+
+.grid-top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.grid-top{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel h2{font-size:19px;margin-bottom:4px}
+.hint{color:var(--ink-2);font-size:13px;margin:0 0 10px}
+textarea#copy{width:100%;min-height:210px;resize:vertical;border:1px solid var(--line-2);border-radius:10px;padding:12px;background:var(--bg);line-height:1.5}
+textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field select,.field input[type=number]{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--bg);min-width:96px}
+.btn{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.btn.rosa{background:var(--rosa);color:#2B2622;border-color:var(--rosa)}
+.btn.sm{padding:6px 11px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+kbd{font:600 11px Manrope,sans-serif;background:var(--rosa-soft);color:var(--rosa-ink);padding:2px 6px;border-radius:5px}
+
+/* libreria foto */
+.lib-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:6px;max-height:300px;overflow:auto;padding:2px}
+.lib-grid .ph{position:relative;aspect-ratio:9/16;border-radius:7px;overflow:hidden;background:var(--line);cursor:pointer;border:2px solid transparent}
+.lib-grid .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.lib-grid .ph.sel{border-color:var(--verde)}
+.lib-grid .ph .x{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(43,38,34,.75);color:#fff;border:0;font-size:12px;line-height:20px;text-align:center;padding:0;cursor:pointer;opacity:0}
+.lib-grid .ph:hover .x{opacity:1}
+.lib-grid .ph .used{position:absolute;left:3px;bottom:3px;background:var(--giallo);color:#2B2622;font-size:10px;font-weight:700;border-radius:4px;padding:1px 4px}
+.drop{border:1.5px dashed var(--line-2);border-radius:10px;padding:14px;text-align:center;color:var(--ink-2);font-size:13px;cursor:pointer;margin-top:10px}
+.drop.over{border-color:var(--verde);background:var(--rosa-soft)}
+.empty{color:var(--ink-3);font-size:13px;padding:20px 6px;text-align:center}
+
+/* storie */
+section.stories{margin-top:22px}
+.stories-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stories-head .meta{color:var(--ink-2);font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+@media (max-width:560px){.cards{grid-template-columns:repeat(2,1fr);gap:10px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card .stage{position:relative;aspect-ratio:9/16;background:#111;touch-action:none}
+.card canvas{width:100%;height:100%;display:block;cursor:grab}
+.card canvas.dragging{cursor:grabbing}
+.card .num{position:absolute;top:8px;left:8px;background:rgba(255,255,255,.92);color:#2B2622;font-size:11px;font-weight:700;border-radius:6px;padding:3px 7px;letter-spacing:.04em}
+.card .noph{position:absolute;inset:0;display:grid;place-items:center;color:#bbb;font-size:13px;text-align:center;padding:20px}
+.card .body{padding:10px;display:flex;flex-direction:column;gap:8px}
+.card textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);font-size:13px;line-height:1.4}
+.card .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.card .row select,.card .row input[type=range]{flex:1;min-width:0}
+.card select{border:1px solid var(--line);border-radius:7px;padding:5px 6px;background:var(--bg);font-size:12px}
+.card input[type=range]{accent-color:var(--verde)}
+.icon{border:1px solid var(--line);background:var(--bg);border-radius:7px;width:30px;height:30px;padding:0;cursor:pointer;font-size:13px;display:grid;place-items:center}
+.icon:hover{border-color:var(--ink-3)}
+.icon.danger:hover{color:var(--rosa-ink);border-color:var(--rosa-ink)}
+
+/* storico */
+.hist{margin-top:22px}
+.hist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
+.hist li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--panel)}
+.hist li:hover{border-color:var(--ink-3)}
+.hist .t{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.hist .d{font-size:11px;color:var(--ink-2);white-space:nowrap}
+
+/* picker + viewer */
+.modal{position:fixed;inset:0;background:rgba(20,16,14,.78);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.modal.open{display:flex}
+.modal .box{background:var(--panel);border-radius:16px;padding:16px;max-width:920px;width:100%;max-height:92vh;overflow:auto;box-shadow:var(--shadow)}
+.modal .box h3{font-size:18px;margin-bottom:10px}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+.pick-grid .ph{aspect-ratio:9/16;border-radius:8px;overflow:hidden;cursor:pointer;border:3px solid transparent;position:relative}
+.pick-grid .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.pick-grid .ph:hover{border-color:var(--verde)}
+.viewer img{max-width:100%;max-height:78vh;display:block;margin:0 auto;border-radius:10px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--btn);color:var(--btn-ink);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}
+.toast.show{opacity:1}
+.progress{font-size:13px;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Impaginatore <em>Storie</em></h1>
+      <p class="sub">Incolla il copy, premi <strong>Impagina</strong> e ogni frase finisce già sulla sua foto, riquadro bianco stile Instagram. Sposta il testo trascinandolo, cambia foto con un click, scarica tutto in 1080×1920.</p>
+    </div>
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm" id="btn-help">Come funziona</button>
+    </div>
+  </header>
+
+  <div class="grid-top">
+    <div class="panel">
+      <h2>1. Copy</h2>
+      <p class="hint">Una <strong>riga vuota</strong> = nuova storia. Dentro un paragrafo il testo viene spezzato per frasi. Metti una parola tra asterischi (<code>*così*</code>) per farla <span style="color:var(--rosa-ink);font-weight:700">rosa</span>.</p>
+      <textarea id="copy" placeholder="Buongiorno! Oggi ho un tempo risicato per allenarmi, ma meglio farlo così piuttosto che saltare.
+
+Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati! Rispondi a questa storia con INFO per candidarti."></textarea>
+      <div class="controls">
+        <div class="field"><span class="label">Frasi per storia</span>
+          <select id="per-story"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="0">tutto il paragrafo</option></select></div>
+        <div class="field"><span class="label">Corpo testo</span>
+          <input type="number" id="base-size" value="52" min="24" max="90" step="2"></div>
+        <div class="field"><span class="label">Stile</span>
+          <select id="base-style"><option value="white">Riquadro bianco</option><option value="black">Riquadro nero</option><option value="rosa">Riquadro rosa</option><option value="plain">Solo testo bianco</option></select></div>
+        <div class="field"><span class="label">Posizione</span>
+          <select id="base-pos"><option value="0.5">Centro</option><option value="0.22">Alto</option><option value="0.78">Basso</option></select></div>
+        <button class="btn primary" id="btn-layout">Impagina <kbd>⌘↵</kbd></button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="lib-head">
+        <div><h2>2. Le tue foto</h2><p class="hint" style="margin:0" id="lib-count">Nessuna foto ancora.</p></div>
+        <button class="btn sm" id="btn-add">+ Aggiungi</button>
+      </div>
+      <div class="lib-grid" id="lib"></div>
+      <div class="drop" id="drop">Trascina qui le foto, oppure tocca per sceglierle dal telefono. Restano salvate su questo dispositivo, nessuno le vede.</div>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+    </div>
+  </div>
+
+  <section class="stories">
+    <div class="stories-head">
+      <div><h2 style="font-size:22px">3. Storie</h2><div class="meta" id="meta">Impagina un copy per iniziare.</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="progress" id="progress"></span>
+        <button class="btn sm" id="btn-add-story">+ Storia vuota</button>
+        <button class="btn sm" id="btn-shuffle">Rimescola foto</button>
+        <button class="btn sm" id="btn-share" hidden>Condividi</button>
+        <button class="btn rosa" id="btn-download">Scarica tutte</button>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="hist panel" style="margin-top:22px">
+    <div class="lib-head"><div><h2>Storico</h2><p class="hint" style="margin:0">Ogni impaginazione resta qui. Tocca per riaprirla e modificarla.</p></div>
+      <button class="btn sm" id="btn-clear-hist">Svuota</button></div>
+    <ul id="hist"></ul>
+  </section>
+</div>
+
+<div class="modal" id="picker"><div class="box"><h3>Scegli la foto</h3><div class="pick-grid" id="pick-grid"></div><div style="margin-top:12px;text-align:right"><button class="btn sm" id="pick-close">Chiudi</button></div></div></div>
+<div class="modal" id="viewer"><div class="box viewer"><h3 id="viewer-title">Storia</h3><img id="viewer-img" alt="Anteprima storia"><p class="hint" style="margin-top:10px">Tieni premuto sull'immagine per salvarla nel rullino, oppure usa Condividi.</p><div style="text-align:right"><button class="btn sm" id="viewer-close">Chiudi</button></div></div></div>
+<div class="modal" id="help"><div class="box"><h3>Come funziona</h3>
+<ol style="padding-left:18px;line-height:1.7;margin:0">
+<li><strong>Foto.</strong> Carica una volta le tue foto verticali: restano salvate nel browser di questo dispositivo (non vanno online). Più ne hai, più le storie variano.</li>
+<li><strong>Copy.</strong> Scrivi o incolla il testo. Una riga vuota separa le storie. Dentro un paragrafo, ogni 2 frasi (o quante scegli) nasce una storia. Parola tra <code>*asterischi*</code> = rosa.</li>
+<li><strong>Impagina.</strong> Il testo finisce sulle foto in riquadri bianchi, come lo fai a mano su Instagram. Trascina il testo sulla foto per spostarlo. Sotto ogni storia cambi testo, dimensione, stile e foto.</li>
+<li><strong>Scarica.</strong> "Scarica tutte" salva le immagini 1080×1920 una alla volta. Da telefono usa "Condividi" per mandarle dritte su Instagram.</li>
+</ol>
+<div style="margin-top:12px;text-align:right"><button class="btn sm" id="help-close">Ok</button></div></div></div>
+<div class="toast" id="toast"></div>
+<div class="modal open" id="gate" style="background:var(--bg)"><div class="box" style="max-width:380px;text-align:center">
+  <h3 style="font-size:24px">Impaginatore <em style="color:var(--rosa-ink)">Storie</em></h3>
+  <p class="hint">Inserisci il codice di accesso.</p>
+  <form id="gate-form" style="display:flex;gap:8px;justify-content:center">
+    <input id="gate-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Codice" style="border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;background:var(--bg);width:160px;text-align:center;letter-spacing:.2em;font-size:18px">
+    <button class="btn primary" type="submit">Entra</button>
+  </form>
+  <p class="hint" id="gate-err" style="color:var(--rosa-ink);margin-top:10px;min-height:1.2em"></p>
+</div></div>
+
+<script>
+(() => {
+  const HASH = '089d63e66858a269b91a5d1575f7a015dab7b06ed6b0d629c36304237d4e76e9';
+  const gate = document.getElementById('gate');
+  const ok = () => { gate.classList.remove('open'); try { localStorage.setItem('abf-gate', '1'); } catch(e){} };
+  try { if (localStorage.getItem('abf-gate') === '1') gate.classList.remove('open'); } catch(e){}
+  async function sha(s){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  document.getElementById('gate-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const v = document.getElementById('gate-pin').value.trim();
+    let h = ''; try { h = await sha(v); } catch(err){ h = ''; }
+    if (h === HASH) ok(); else { document.getElementById('gate-err').textContent = 'Codice non valido.'; document.getElementById('gate-pin').select(); }
+  });
+})();
+</script>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const W = 1080, H = 1920;
+const STYLE = {
+  white:{box:'#ffffff',ink:'#1a1a1a',hl:'#d63d7a'},
+  black:{box:'#111111',ink:'#ffffff',hl:'#ffb3cf'},
+  rosa:{box:'#ffc1c1',ink:'#2B2622',hl:'#b0264e'},
+  plain:{box:null,ink:'#ffffff',hl:'#ffb3cf'}
+};
+const FONT = '"Lora", Georgia, serif';
+
+/* ---------- storage: IndexedDB for photos ---------- */
+let dbp = null;
+function idb(){
+  if (dbp) return dbp;
+  dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('impaginatore-abf', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('photos', {keyPath:'id'}); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return dbp;
+}
+async function idbAll(){ const d = await idb(); return new Promise((res,rej)=>{ const t=d.transaction('photos').objectStore('photos').getAll(); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); }
+async function idbPut(p){ const d = await idb(); return new Promise((res,rej)=>{ const t=d.transaction('photos','readwrite'); t.objectStore('photos').put(p); t.oncomplete=res; t.onerror=()=>rej(t.error); }); }
+async function idbDel(id){ const d = await idb(); return new Promise((res,rej)=>{ const t=d.transaction('photos','readwrite'); t.objectStore('photos').delete(id); t.oncomplete=res; t.onerror=()=>rej(t.error); }); }
+function lsGet(k, fb){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+/* ---------- state ---------- */
+const photos = new Map();   // id -> {id, blob, url, img, added, used}
+let stories = [];           // {id, text, photoId, x, y, size, style}
+let currentId = null;
+let downloads = null, canShareFiles = false;
+
+/* ---------- photo library ---------- */
+async function loadPhotos(){
+  const all = await idbAll();
+  for (const p of all) attachPhoto(p);
+  renderLib();
+}
+function attachPhoto(p){
+  const url = URL.createObjectURL(p.blob);
+  const img = new Image(); img.src = url;
+  photos.set(p.id, {...p, url, img});
+  img.decode?.().catch(()=>{});
+}
+function resizeFile(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      const maxH = 1920, maxW = 1080;
+      let s = Math.min(1, maxH / im.naturalHeight, (maxW * 1.6) / im.naturalWidth);
+      const c = document.createElement('canvas');
+      c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      c.toBlob(b => { URL.revokeObjectURL(url); b ? res(b) : rej(new Error('encode')); }, 'image/jpeg', 0.88);
+    };
+    im.onerror = () => rej(new Error('Formato non leggibile'));
+    im.src = url;
+  });
+}
+async function addFiles(files){
+  const list = [...files].filter(f => f.type.startsWith('image/'));
+  if (!list.length) return;
+  toast(`Carico ${list.length} foto…`);
+  let ok = 0;
+  for (const f of list){
+    try {
+      const blob = await resizeFile(f);
+      const p = {id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2,6), blob, added: Date.now(), used: 0};
+      await idbPut(p); attachPhoto(p); ok++;
+    } catch(e){ console.warn(e); }
+  }
+  renderLib();
+  toast(`${ok} foto aggiunte alla libreria`);
+}
+function renderLib(){
+  const lib = $('#lib'); lib.innerHTML = '';
+  const arr = [...photos.values()].sort((a,b) => b.added - a.added);
+  $('#lib-count').textContent = arr.length ? `${arr.length} foto salvate su questo dispositivo.` : 'Nessuna foto ancora.';
+  if (!arr.length){ lib.innerHTML = '<div class="empty">Carica le tue foto verticali: il tool le userà a rotazione.</div>'; return; }
+  for (const p of arr){
+    const d = document.createElement('div'); d.className = 'ph'; d.title = 'Usata ' + (p.used||0) + ' volte';
+    d.innerHTML = `<img src="${p.url}" alt=""><button class="x" aria-label="Elimina foto">×</button>` + (p.used ? `<span class="used">${p.used}</span>` : '');
+    d.querySelector('.x').onclick = async ev => { ev.stopPropagation(); if (!confirm('Eliminare questa foto dalla libreria?')) return; await idbDel(p.id); URL.revokeObjectURL(p.url); photos.delete(p.id); renderLib(); renderCards(); };
+    d.onclick = () => { if (!stories.length) return; const empty = stories.find(s => !s.photoId); if (empty){ empty.photoId = p.id; renderCards(); autosave(); toast('Foto assegnata alla storia ' + (stories.indexOf(empty)+1)); } };
+    lib.appendChild(d);
+  }
+}
+
+/* ---------- copy -> stories ---------- */
+function splitSentences(par){
+  const out = [];
+  for (const line of par.split(/\n+/)){
+    const t = line.trim(); if (!t) continue;
+    const parts = t.split(/(?<=[.!?…])\s+(?=\S)/u);
+    for (const p of parts) if (p.trim()) out.push(p.trim());
+  }
+  return out;
+}
+function layout(){
+  const copy = $('#copy').value.trim();
+  if (!copy){ toast('Scrivi prima il copy'); return; }
+  const per = parseInt($('#per-story').value, 10);
+  const size = parseInt($('#base-size').value, 10) || 52;
+  const style = $('#base-style').value;
+  const y = parseFloat($('#base-pos').value);
+  const texts = [];
+  for (const par of copy.split(/\n\s*\n/)){
+    const s = splitSentences(par);
+    if (!s.length) continue;
+    if (per === 0){ texts.push(s.join(' ')); continue; }
+    for (let i = 0; i < s.length; i += per) texts.push(s.slice(i, i + per).join(' '));
+  }
+  const pool = pickPhotos(texts.length);
+  stories = texts.map((text, i) => ({id: uid(), text, photoId: pool[i] || null, x: 0.5, y, size, style}));
+  currentId = uid();
+  renderCards(); saveToHistory(); autosave();
+  $('#cards').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function pickPhotos(n){
+  const arr = [...photos.values()];
+  if (!arr.length) return [];
+  // least used first, random among ties, no repeats until exhausted
+  const sorted = arr.map(p => ({p, k: (p.used||0) + Math.random()})).sort((a,b) => a.k - b.k).map(o => o.p.id);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(sorted[i % sorted.length]);
+  for (const id of out){ const p = photos.get(id); if (p){ p.used = (p.used||0) + 1; idbPut({id:p.id, blob:p.blob, added:p.added, used:p.used}); } }
+  renderLib();
+  return out;
+}
+function shuffle(){
+  if (!stories.length) return;
+  const pool = pickPhotos(stories.length);
+  stories.forEach((s, i) => s.photoId = pool[i] || s.photoId);
+  renderCards(); autosave();
+}
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+/* ---------- rendering (shared by preview and export) ---------- */
+function tokenize(text){
+  // *word* -> highlighted
+  const toks = []; let hl = false;
+  for (const seg of text.split('*')){
+    if (seg) for (const w of seg.split(/\s+/)) if (w) toks.push({w, hl});
+    hl = !hl;
+  }
+  return toks;
+}
+function wrapLines(ctx, toks, maxW){
+  const lines = []; let cur = []; let curW = 0; const sp = ctx.measureText(' ').width;
+  for (const t of toks){
+    const w = ctx.measureText(t.w).width;
+    if (cur.length && curW + sp + w > maxW){ lines.push(cur); cur = [t]; curW = w; }
+    else { curW += cur.length ? sp + w : w; cur.push(t); }
+  }
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+function draw(ctx, s, cw, ch){
+  const k = cw / W; // scale from 1080 base
+  ctx.save(); ctx.scale(k, k);
+  ctx.fillStyle = '#151515'; ctx.fillRect(0, 0, W, H);
+  const p = s.photoId && photos.get(s.photoId);
+  if (p && p.img.complete && p.img.naturalWidth){
+    const im = p.img, r = Math.max(W / im.naturalWidth, H / im.naturalHeight);
+    const dw = im.naturalWidth * r, dh = im.naturalHeight * r;
+    ctx.drawImage(im, (W - dw) / 2, (H - dh) / 2, dw, dh);
+  }
+  const st = STYLE[s.style] || STYLE.white;
+  const fs = s.size;
+  ctx.font = `500 ${fs}px ${FONT}`; ctx.textBaseline = 'middle';
+  const padX = fs * 0.42, padY = fs * 0.22, lh = fs * 1.42, rad = fs * 0.28;
+  const lines = wrapLines(ctx, tokenize(s.text), W * 0.82 - padX * 2);
+  const totalH = lines.length * lh;
+  const cx = s.x * W, top = s.y * H - totalH / 2;
+  if (!st.box){ ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = fs * 0.35; }
+  lines.forEach((ln, i) => {
+    const sp = ctx.measureText(' ').width;
+    const ws = ln.map(t => ctx.measureText(t.w).width);
+    const lw = ws.reduce((a, b) => a + b, 0) + sp * (ln.length - 1);
+    const yc = top + i * lh + lh / 2;
+    if (st.box){
+      ctx.fillStyle = st.box;
+      rrect(ctx, cx - lw / 2 - padX, yc - lh / 2 - padY + (lh - fs) / 2 - fs * 0.02, lw + padX * 2, fs + padY * 2, rad);
+      ctx.fill();
+    }
+    let x = cx - lw / 2;
+    ln.forEach((t, j) => { ctx.fillStyle = t.hl ? st.hl : st.ink; ctx.fillText(t.w, x, yc); x += ws[j] + sp; });
+  });
+  ctx.restore();
+  return {top: top / H, bottom: (top + totalH) / H};
+}
+function rrect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ---------- cards ---------- */
+function renderCards(){
+  const host = $('#cards'); host.innerHTML = '';
+  $('#meta').textContent = stories.length ? `${stories.length} storie · ${photos.size} foto in libreria · trascina il testo per spostarlo` : 'Impagina un copy per iniziare.';
+  $('#btn-download').disabled = !stories.length; $('#btn-shuffle').disabled = !stories.length;
+  stories.forEach((s, i) => {
+    const c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = `
+      <div class="stage"><canvas></canvas><span class="num">STORIA ${i + 1}</span>${s.photoId ? '' : '<div class="noph">Nessuna foto: tocca una foto nella libreria o "Cambia foto"</div>'}</div>
+      <div class="body">
+        <textarea aria-label="Testo storia ${i + 1}">${esc(s.text)}</textarea>
+        <div class="row">
+          <input type="range" min="24" max="90" step="2" value="${s.size}" aria-label="Dimensione testo">
+          <select aria-label="Stile">${Object.keys(STYLE).map(k => `<option value="${k}" ${k === s.style ? 'selected' : ''}>${({white:'Bianco',black:'Nero',rosa:'Rosa',plain:'Solo testo'})[k]}</option>`).join('')}</select>
+        </div>
+        <div class="row">
+          <button class="btn sm" data-a="photo">Cambia foto</button>
+          <button class="btn sm" data-a="one">Salva</button>
+          <span style="flex:1"></span>
+          <button class="icon" data-a="up" title="Sposta prima" aria-label="Sposta prima">↑</button>
+          <button class="icon" data-a="down" title="Sposta dopo" aria-label="Sposta dopo">↓</button>
+          <button class="icon" data-a="dup" title="Duplica" aria-label="Duplica">⧉</button>
+          <button class="icon danger" data-a="del" title="Elimina" aria-label="Elimina">✕</button>
+        </div>
+      </div>`;
+    const cv = c.querySelector('canvas');
+    const paint = () => { const r = cv.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.width * dpr * 16 / 9); draw(cv.getContext('2d'), s, cv.width, cv.height); };
+    c.querySelector('textarea').addEventListener('input', e => { s.text = e.target.value; paint(); autosaveSoon(); });
+    c.querySelector('input[type=range]').addEventListener('input', e => { s.size = +e.target.value; paint(); autosaveSoon(); });
+    c.querySelector('select').addEventListener('change', e => { s.style = e.target.value; paint(); autosaveSoon(); });
+    c.querySelectorAll('[data-a]').forEach(b => b.onclick = () => action(b.dataset.a, i));
+    // drag text
+    let drag = null;
+    cv.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, sx: s.x, sy: s.y}; cv.setPointerCapture(e.pointerId); cv.classList.add('dragging'); });
+    cv.addEventListener('pointermove', e => { if (!drag) return; const r = cv.getBoundingClientRect(); s.x = clamp(drag.sx + (e.clientX - drag.x) / r.width, 0.15, 0.85); s.y = clamp(drag.sy + (e.clientY - drag.y) / r.height, 0.06, 0.94); paint(); });
+    const end = () => { if (drag){ drag = null; cv.classList.remove('dragging'); autosaveSoon(); } };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    host.appendChild(c);
+    s._paint = paint;
+    requestAnimationFrame(paint);
+    const p = s.photoId && photos.get(s.photoId);
+    if (p && !p.img.complete) p.img.addEventListener('load', paint, {once: true});
+  });
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = t => t.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+function action(a, i){
+  const s = stories[i];
+  if (a === 'del'){ stories.splice(i, 1); }
+  else if (a === 'up' && i > 0){ [stories[i-1], stories[i]] = [stories[i], stories[i-1]]; }
+  else if (a === 'down' && i < stories.length - 1){ [stories[i+1], stories[i]] = [stories[i], stories[i+1]]; }
+  else if (a === 'dup'){ stories.splice(i + 1, 0, {...s, id: uid()}); }
+  else if (a === 'photo'){ openPicker(s); return; }
+  else if (a === 'one'){ exportOne(s, i); return; }
+  renderCards(); autosave();
+}
+function openPicker(s){
+  const g = $('#pick-grid'); g.innerHTML = '';
+  const arr = [...photos.values()].sort((a,b) => b.added - a.added);
+  if (!arr.length) g.innerHTML = '<div class="empty">La libreria è vuota: aggiungi prima qualche foto.</div>';
+  for (const p of arr){
+    const d = document.createElement('div'); d.className = 'ph'; d.innerHTML = `<img src="${p.url}" alt="">`;
+    d.onclick = () => { s.photoId = p.id; p.used = (p.used||0) + 1; idbPut({id:p.id, blob:p.blob, added:p.added, used:p.used}); $('#picker').classList.remove('open'); renderCards(); renderLib(); autosave(); };
+    g.appendChild(d);
+  }
+  $('#picker').classList.add('open');
+}
+
+/* ---------- export ---------- */
+function renderFull(s){
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  draw(c.getContext('2d'), s, W, H);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', 0.92));
+}
+const fname = i => `storia-${String(i + 1).padStart(2, '0')}.jpg`;
+async function exportOne(s, i){
+  const blob = await renderFull(s);
+  await deliver([{blob, name: fname(i)}]);
+}
+async function exportAll(){
+  if (!stories.length) return;
+  const files = [];
+  for (let i = 0; i < stories.length; i++){ $('#progress').textContent = `Preparo ${i + 1}/${stories.length}…`; files.push({blob: await renderFull(stories[i]), name: fname(i)}); }
+  $('#progress').textContent = '';
+  await deliver(files);
+}
+async function deliver(files){
+  if (downloads){
+    let n = 0;
+    for (const f of files){
+      $('#progress').textContent = `Salvo ${n + 1}/${files.length}: conferma nella finestra`;
+      try { await downloads.save({filename: f.name, data: f.blob}); n++; }
+      catch(e){ if (e && e.code === 'declined'){ toast('Salvataggio annullato'); break; } if (e && e.code === 'rate_limited'){ await new Promise(r => setTimeout(r, 1500)); try { await downloads.save({filename: f.name, data: f.blob}); n++; } catch(e2){ console.warn(e2); } } else { console.warn(e); } }
+    }
+    $('#progress').textContent = '';
+    if (n) toast(`${n} ${n === 1 ? 'storia salvata' : 'storie salvate'}`);
+    return;
+  }
+  // fuori dal runtime Claude (es. sito statico): link di download classico
+  if (!window.claude){
+    if (canShareFiles && files.length > 1){ await shareFiles(files); return; }
+    for (const f of files){
+      const a = document.createElement('a'); const u = URL.createObjectURL(f.blob);
+      a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 4000);
+      await new Promise(r => setTimeout(r, 350));
+    }
+    toast(`${files.length} ${files.length === 1 ? 'storia scaricata' : 'storie scaricate'}`);
+    return;
+  }
+  if (files.length === 1){ showViewer(files[0]); return; }
+  if (canShareFiles){ await shareFiles(files); return; }
+  showViewer(files[0]); toast('Salvataggio non disponibile qui: usa il pulsante Salva di ogni storia');
+}
+async function shareFiles(files){
+  const fl = files.map(f => new File([f.blob], f.name, {type: 'image/jpeg'}));
+  try { if (navigator.canShare && navigator.canShare({files: fl})) await navigator.share({files: fl, title: 'Storie'}); else toast('Condivisione non supportata su questo browser'); }
+  catch(e){ if (e && e.name !== 'AbortError') toast('Condivisione non riuscita'); }
+}
+function showViewer(f){
+  const img = $('#viewer-img'); if (img.dataset.url) URL.revokeObjectURL(img.dataset.url);
+  const u = URL.createObjectURL(f.blob); img.src = u; img.dataset.url = u; $('#viewer-title').textContent = f.name; $('#viewer').classList.add('open');
+}
+
+/* ---------- history / autosave ---------- */
+function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(({id, text, photoId, x, y, size, style}) => ({id, text, photoId, x, y, size, style}))}; }
+function saveToHistory(){
+  if (!stories.length) return;
+  const h = lsGet('abf-hist', []).filter(x => x.id !== currentId);
+  h.unshift(snapshot()); lsSet('abf-hist', h.slice(0, 40)); renderHist();
+}
+let saveT = null;
+function autosaveSoon(){ clearTimeout(saveT); saveT = setTimeout(autosave, 500); }
+function autosave(){ if (!currentId) return; lsSet('abf-current', snapshot()); saveToHistory(); }
+function renderHist(){
+  const ul = $('#hist'); ul.innerHTML = '';
+  const h = lsGet('abf-hist', []);
+  if (!h.length){ ul.innerHTML = '<li style="cursor:default;color:var(--ink-3)">Ancora niente. La prima impaginazione comparirà qui.</li>'; return; }
+  for (const it of h){
+    const li = document.createElement('li');
+    const first = (it.stories[0] && it.stories[0].text) || it.copy || '';
+    li.innerHTML = `<span class="t">${esc(first.slice(0, 90))}</span><span class="d">${it.stories.length} storie · ${new Date(it.date).toLocaleDateString('it-IT', {day:'2-digit', month:'short'})} ${new Date(it.date).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</span>`;
+    li.onclick = () => restore(it);
+    ul.appendChild(li);
+  }
+}
+function restore(it){
+  currentId = it.id; $('#copy').value = it.copy || '';
+  stories = it.stories.map(s => ({...s, photoId: photos.has(s.photoId) ? s.photoId : null}));
+  renderCards(); lsSet('abf-current', snapshot());
+  $('#cards').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+/* ---------- ui wiring ---------- */
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
+$('#btn-layout').onclick = layout;
+$('#copy').addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); layout(); } });
+$('#btn-shuffle').onclick = shuffle;
+$('#btn-download').onclick = exportAll;
+$('#btn-share').onclick = async () => { const files = []; for (let i = 0; i < stories.length; i++) files.push({blob: await renderFull(stories[i]), name: fname(i)}); await shareFiles(files); };
+$('#btn-add-story').onclick = () => { const size = parseInt($('#base-size').value, 10) || 44; if (!currentId) currentId = uid(); stories.push({id: uid(), text: 'Nuova storia', photoId: pickPhotos(1)[0] || null, x: 0.5, y: 0.5, size, style: $('#base-style').value}); renderCards(); autosave(); };
+$('#btn-add').onclick = () => $('#file').click();
+$('#drop').onclick = () => $('#file').click();
+$('#file').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+const dz = $('#drop');
+['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+document.addEventListener('paste', e => { const fs = [...(e.clipboardData?.files || [])]; if (fs.length && document.activeElement !== $('#copy')) addFiles(fs); });
+$('#pick-close').onclick = () => $('#picker').classList.remove('open');
+$('#viewer-close').onclick = () => $('#viewer').classList.remove('open');
+$('#btn-help').onclick = () => $('#help').classList.add('open');
+$('#help-close').onclick = () => $('#help').classList.remove('open');
+$('#btn-clear-hist').onclick = () => { if (confirm('Svuotare lo storico delle impaginazioni? Le foto restano.')) { lsSet('abf-hist', []); renderHist(); } };
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+let rT = null; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => stories.forEach(s => s._paint && s._paint()), 120); });
+
+/* ---------- boot ---------- */
+(async () => {
+  try { if (navigator.canShare && navigator.canShare({files: [new File([new Blob(['x'])], 'x.jpg', {type: 'image/jpeg'})]})) { canShareFiles = true; $('#btn-share').hidden = false; } } catch(e){}
+  await loadPhotos().catch(e => { console.warn(e); toast('Libreria foto non disponibile in questo browser'); });
+  renderHist();
+  const cur = lsGet('abf-current', null);
+  if (cur && cur.stories && cur.stories.length) restore(cur);
+  if (document.fonts && document.fonts.load){ document.fonts.load(`500 40px ${FONT}`).then(() => stories.forEach(s => s._paint && s._paint())).catch(()=>{}); }
+  if (window.claude && window.claude.use){
+    try { downloads = await window.claude.use('downloads'); } catch(e){ downloads = null; }
+  }
+})();
+})();
+</script>
+</body></html>
