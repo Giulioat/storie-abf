@@ -106,6 +106,7 @@ kbd{font:600 10.5px Inter,sans-serif;background:rgba(255,255,255,.18);color:inhe
 .card canvas{width:100%;height:100%;display:block;cursor:grab}
 .card canvas.dragging{cursor:grabbing}
 .card .num{position:absolute;top:8px;left:8px;background:rgba(255,255,255,.94);color:#217257;font-size:10.5px;font-weight:700;border-radius:6px;padding:3px 7px;letter-spacing:.05em}
+.card .refth{position:absolute;top:8px;right:8px;width:22%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:zoom-in;z-index:2}
 .card .noph{position:absolute;inset:0;display:grid;place-items:center;color:#bbb;font-size:12.5px;text-align:center;padding:20px}
 .card .body{padding:10px;display:flex;flex-direction:column;gap:8px}
 .card textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel);font-size:12.5px;line-height:1.4}
@@ -289,6 +290,7 @@ Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati!
 <li><strong>Foto.</strong> Carica una volta le tue foto verticali: restano salvate nel browser di questo dispositivo (non vanno online). Più ne hai, più le storie variano.</li>
 <li><strong>Copy.</strong> Scrivi o incolla il testo. Una riga vuota separa le storie. Dentro un paragrafo, ogni 2 frasi (o quante scegli) nasce una storia. Parola tra <code>*asterischi*</code> = rosa.</li>
 <li><strong>Impagina.</strong> Il testo finisce sulle foto in riquadri bianchi, come lo fai a mano su Instagram. Trascina il testo sulla foto per spostarlo. Sotto ogni storia cambi testo, dimensione, stile, font e foto. Con "+ Blocco di testo" aggiungi altri riquadri alla stessa storia, ognuno trascinabile da solo; nel copy, una riga che inizia con <code>+</code> crea già un blocco in più. Per colorare una o più parole: selezionale nel testo del blocco e tocca un cerchietto colore (✕ toglie il colore). "Spezza qui" divide il blocco in due dove sta il cursore, come quando su Instagram vai a capo. L'invio dentro un blocco manda a capo la riga.</li>
+<li><strong>Reference.</strong> In fondo trovi le 5 sequenze con più risposte. "Usa come base" crea una sequenza nuova con lo stesso numero di storie: su ogni card resta la miniatura della storia originale (tocca per ingrandire) per copiarne foto, quantità di testo e posizione.</li>
 <li><strong>Scarica.</strong> "Scarica tutte" salva le immagini 1080×1920 una alla volta. Da telefono usa "Condividi" per mandarle dritte su Instagram.</li>
 </ol>
 <div style="margin-top:12px;text-align:right"><button class="btn sm" id="help-close">Ok</button></div></div></div>
@@ -576,7 +578,7 @@ function renderCards(){
         <div class="row"><select class="font" aria-label="Font">${Object.keys(FONTS).map(k => `<option value="${k}" ${k === (bl.font || DEFAULT_FONT) ? 'selected' : ''}>${FONTS[k].label}</option>`).join('')}</select></div>
       </div>`).join('');
     c.innerHTML = `
-      <div class="stage"><canvas></canvas><span class="num">STORIA ${i + 1}</span>${s.photoId ? '' : '<div class="noph">Nessuna foto: tocca una foto nella libreria o "Cambia foto"</div>'}</div>
+      <div class="stage"><canvas></canvas><span class="num">STORIA ${i + 1}</span>${s.ref && s.ref.img ? `<img class="refth" src="${s.ref.img}" alt="Storia di riferimento" title="${esc(s.ref.label)} · tocca per ingrandire">` : ''}${s.photoId ? '' : '<div class="noph">Nessuna foto: tocca una foto nella libreria o "Cambia foto"</div>'}</div>
       <div class="body">
         ${blocksHtml}
         <button class="btn sm" data-a="addblk" style="align-self:flex-start">+ Blocco di testo</button>
@@ -627,6 +629,7 @@ function renderCards(){
       };
     });
     c.querySelectorAll('[data-a]').forEach(b => b.onclick = () => action(b.dataset.a, i));
+    const rt = c.querySelector('.refth'); if (rt) rt.onclick = () => { const img = $('#viewer-img'); img.src = s.ref.img; img.removeAttribute('data-url'); $('#viewer-title').textContent = s.ref.label; $('#viewer').classList.add('open'); };
     setSel(sel);
     // drag: pick the block under the finger, else the nearest one
     let drag = null;
@@ -732,7 +735,7 @@ function showViewer(f){
 }
 
 /* ---------- history / autosave ---------- */
-function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(st => ({id: st.id, photoId: st.photoId, blocks: st.blocks.map(({id, text, x, y, size, style, font}) => ({id, text, x, y, size, style, font}))}))}; }
+function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(st => ({id: st.id, photoId: st.photoId, ref: st.ref || null, blocks: st.blocks.map(({id, text, x, y, size, style, font}) => ({id, text, x, y, size, style, font}))}))}; }
 function saveToHistory(){
   if (!stories.length) return;
   const h = lsGet('abf-hist', []).filter(x => x.id !== currentId);
@@ -772,7 +775,7 @@ async function loadReference(){
   $('#ref-sub').textContent = `Dati Instagram (Graph API) su ${data.total_stories} storie in ${data.total_sequences} sequenze. Aggiornato ${data.updated.slice(0, 16).replace('T', ' ')}. Guarda come sono impaginate: foto, quantità di testo, posizione, CTA.`;
   host.innerHTML = data.sequences.map(sq => `
     <div class="seq">
-      <div class="seq-head"><span class="rank">#${sq.rank}</span><span class="date">${sq.label}</span><span class="kpi">${sq.from}–${sq.to} · ${sq.count} storie · <b>${sq.replies} risposte</b> · reach max ${sq.reach.toLocaleString('it-IT')}</span></div>
+      <div class="seq-head"><span class="rank">#${sq.rank}</span><span class="date">${sq.label}</span><span class="kpi">${sq.from}–${sq.to} · ${sq.count} storie · <b>${sq.replies} risposte</b> · reach max ${sq.reach.toLocaleString('it-IT')}</span><span style="flex:1"></span><button class="btn sm primary" data-use="${sq.rank}">Usa come base</button></div>
       <div class="seq-strip">${sq.stories.map(st => `
         <div class="st" data-img="${st.img || ''}" data-link="${st.permalink || ''}" title="${st.time} · ${st.replies} risposte · reach ${st.reach}">
           ${st.img ? `<img src="${st.img}" alt="Storia delle ${st.time}" loading="lazy">` : '<div class="noimg">media non disponibile</div>'}
@@ -780,11 +783,29 @@ async function loadReference(){
           <span class="rep ${st.replies ? '' : 'zero'}">${st.replies} ✉</span><span class="tm">${st.time}</span>
         </div>`).join('')}</div>
     </div>`).join('');
+  host.querySelectorAll('[data-use]').forEach(b => b.onclick = () => useAsBase(data.sequences.find(q => q.rank === +b.dataset.use)));
   host.querySelectorAll('.st').forEach(el => el.onclick = () => {
     if (!el.dataset.img) return;
     const img = $('#viewer-img'); img.src = el.dataset.img; img.removeAttribute('data-url');
     $('#viewer-title').textContent = el.title; $('#viewer').classList.add('open');
   });
+}
+
+function useAsBase(sq){
+  if (!sq) return;
+  if (stories.length && !confirm(`Creo una sequenza nuova di ${sq.count} storie sul modello del ${sq.label}. Quella attuale resta nello Storico. Vado?`)) return;
+  const opts = {size: parseInt($('#base-size').value, 10) || 52, style: $('#base-style').value, font: $('#base-font').value};
+  const y = parseFloat($('#base-pos').value);
+  const pool = pickPhotos(sq.count);
+  stories = sq.stories.map((st, i) => ({
+    id: uid(), photoId: pool[i] || null,
+    ref: {img: st.img, time: st.time, replies: st.replies, label: `Ref #${sq.rank} · ${sq.label} · storia ${i + 1}/${sq.count} · ${st.replies} risposte`},
+    blocks: [newBlock(`Storia ${i + 1} di ${sq.count}`, y, opts)]
+  }));
+  currentId = uid();
+  renderCards(); saveToHistory(); autosave();
+  $('#cards').scrollIntoView({behavior: 'smooth', block: 'start'});
+  toast(`Sequenza di ${sq.count} storie creata dal modello del ${sq.label}`);
 }
 
 /* ---------- ui wiring ---------- */
