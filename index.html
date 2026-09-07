@@ -1,6 +1,6 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Storie ABF"><meta name="theme-color" content="#fbf8f6"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23ffc1c1%22/><rect x=%2228%22 y=%2216%22 width=%2244%22 height=%2268%22 rx=%228%22 fill=%22%232B2622%22/></svg>"><style>img{max-width:100%}[hidden]{display:none!important}</style></head><body style="margin:0"><title>Storie ABF</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Lora:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Lora:wght@500;600&family=Gelasio:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,500&family=Domine:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap">
 <style>
 :root{
   --bg:#f9f9f9; --panel:#ffffff; --ink:#1c1e1d; --ink-2:#6d6d6d; --ink-3:#909090;
@@ -195,6 +195,8 @@ Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati! Rispondi a questa st
           <input type="number" id="base-size" value="52" min="24" max="90" step="2"></div>
         <div class="field"><span class="label">Stile</span>
           <select id="base-style"><option value="white">Riquadro bianco</option><option value="black">Riquadro nero</option><option value="rosa">Riquadro rosa</option><option value="plain">Solo testo bianco</option></select></div>
+        <div class="field"><span class="label">Font</span>
+          <select id="base-font"><option value="gelasio" selected>Gelasio (stile Instagram)</option><option value="georgia">Georgia (sistema)</option><option value="literata">Literata</option><option value="domine">Domine</option><option value="sourceserif">Source Serif</option><option value="lora">Lora</option></select></div>
         <div class="field"><span class="label">Posizione</span>
           <select id="base-pos"><option value="0.5">Centro</option><option value="0.22">Alto</option><option value="0.78">Basso</option></select></div>
         <button class="btn primary" id="btn-layout">Impagina <kbd>⌘↵</kbd></button>
@@ -296,7 +298,16 @@ const STYLE = {
   rosa:{box:'#ffc1c1',ink:'#2B2622',hl:'#b0264e'},
   plain:{box:null,ink:'#ffffff',hl:'#ffb3cf'}
 };
-const FONT = '"Lora", Georgia, serif';
+const FONTS = {
+  gelasio:{label:'Gelasio (stile Instagram)', css:'"Gelasio", Georgia, serif', w:400},
+  georgia:{label:'Georgia (sistema)', css:'Georgia, "Gelasio", serif', w:400},
+  literata:{label:'Literata', css:'"Literata", Georgia, serif', w:400},
+  domine:{label:'Domine', css:'"Domine", Georgia, serif', w:400},
+  sourceserif:{label:'Source Serif', css:'"Source Serif 4", Georgia, serif', w:500},
+  lora:{label:'Lora', css:'"Lora", Georgia, serif', w:500}
+};
+const DEFAULT_FONT = 'gelasio';
+const fontOf = s => FONTS[s.font] || FONTS[DEFAULT_FONT];
 
 /* ---------- storage: IndexedDB for photos ---------- */
 let dbp = null;
@@ -404,7 +415,8 @@ function layout(){
     for (let i = 0; i < s.length; i += per) texts.push(s.slice(i, i + per).join(' '));
   }
   const pool = pickPhotos(texts.length);
-  stories = texts.map((text, i) => ({id: uid(), text, photoId: pool[i] || null, x: 0.5, y, size, style}));
+  const font = $('#base-font').value;
+  stories = texts.map((text, i) => ({id: uid(), text, photoId: pool[i] || null, x: 0.5, y, size, style, font}));
   currentId = uid();
   renderCards(); saveToHistory(); autosave();
   $('#cards').scrollIntoView({behavior:'smooth', block:'start'});
@@ -460,7 +472,7 @@ function draw(ctx, s, cw, ch){
   }
   const st = STYLE[s.style] || STYLE.white;
   const fs = s.size;
-  ctx.font = `500 ${fs}px ${FONT}`; ctx.textBaseline = 'middle';
+  const ff = fontOf(s); ctx.font = `${ff.w} ${fs}px ${ff.css}`; ctx.textBaseline = 'middle';
   const padX = fs * 0.42, padY = fs * 0.22, lh = fs * 1.42, rad = fs * 0.28;
   const lines = wrapLines(ctx, tokenize(s.text), W * 0.82 - padX * 2);
   const totalH = lines.length * lh;
@@ -499,6 +511,7 @@ function renderCards(){
           <input type="range" min="24" max="90" step="2" value="${s.size}" aria-label="Dimensione testo">
           <select aria-label="Stile">${Object.keys(STYLE).map(k => `<option value="${k}" ${k === s.style ? 'selected' : ''}>${({white:'Bianco',black:'Nero',rosa:'Rosa',plain:'Solo testo'})[k]}</option>`).join('')}</select>
         </div>
+        <div class="row"><select class="font" aria-label="Font">${Object.keys(FONTS).map(k => `<option value="${k}" ${k === (s.font || DEFAULT_FONT) ? 'selected' : ''}>${FONTS[k].label}</option>`).join('')}</select></div>
         <div class="row">
           <button class="btn sm" data-a="photo">Cambia foto</button>
           <button class="btn sm" data-a="one">Salva</button>
@@ -513,7 +526,8 @@ function renderCards(){
     const paint = () => { const r = cv.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.width * dpr * 16 / 9); draw(cv.getContext('2d'), s, cv.width, cv.height); };
     c.querySelector('textarea').addEventListener('input', e => { s.text = e.target.value; paint(); autosaveSoon(); });
     c.querySelector('input[type=range]').addEventListener('input', e => { s.size = +e.target.value; paint(); autosaveSoon(); });
-    c.querySelector('select').addEventListener('change', e => { s.style = e.target.value; paint(); autosaveSoon(); });
+    c.querySelector('select:not(.font)').addEventListener('change', e => { s.style = e.target.value; paint(); autosaveSoon(); });
+    c.querySelector('select.font').addEventListener('change', e => { s.font = e.target.value; paint(); autosaveSoon(); });
     c.querySelectorAll('[data-a]').forEach(b => b.onclick = () => action(b.dataset.a, i));
     // drag text
     let drag = null;
@@ -609,7 +623,7 @@ function showViewer(f){
 }
 
 /* ---------- history / autosave ---------- */
-function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(({id, text, photoId, x, y, size, style}) => ({id, text, photoId, x, y, size, style}))}; }
+function snapshot(){ return {id: currentId, date: Date.now(), copy: $('#copy').value, stories: stories.map(({id, text, photoId, x, y, size, style, font}) => ({id, text, photoId, x, y, size, style, font}))}; }
 function saveToHistory(){
   if (!stories.length) return;
   const h = lsGet('abf-hist', []).filter(x => x.id !== currentId);
@@ -644,7 +658,7 @@ $('#copy').addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.
 $('#btn-shuffle').onclick = shuffle;
 $('#btn-download').onclick = exportAll;
 $('#btn-share').onclick = async () => { const files = []; for (let i = 0; i < stories.length; i++) files.push({blob: await renderFull(stories[i]), name: fname(i)}); await shareFiles(files); };
-$('#btn-add-story').onclick = () => { const size = parseInt($('#base-size').value, 10) || 44; if (!currentId) currentId = uid(); stories.push({id: uid(), text: 'Nuova storia', photoId: pickPhotos(1)[0] || null, x: 0.5, y: 0.5, size, style: $('#base-style').value}); renderCards(); autosave(); };
+$('#btn-add-story').onclick = () => { const size = parseInt($('#base-size').value, 10) || 44; if (!currentId) currentId = uid(); stories.push({id: uid(), text: 'Nuova storia', photoId: pickPhotos(1)[0] || null, x: 0.5, y: 0.5, size, style: $('#base-style').value, font: $('#base-font').value}); renderCards(); autosave(); };
 $('#btn-add').onclick = () => $('#file').click();
 $('#drop').onclick = () => $('#file').click();
 $('#file').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
@@ -668,7 +682,7 @@ let rT = null; window.addEventListener('resize', () => { clearTimeout(rT); rT = 
   renderHist();
   const cur = lsGet('abf-current', null);
   if (cur && cur.stories && cur.stories.length) restore(cur);
-  if (document.fonts && document.fonts.load){ document.fonts.load(`500 40px ${FONT}`).then(() => stories.forEach(s => s._paint && s._paint())).catch(()=>{}); }
+  if (document.fonts && document.fonts.load){ Promise.all(Object.values(FONTS).map(f => document.fonts.load(`${f.w} 40px ${f.css}`).catch(()=>{}))).then(() => stories.forEach(s => s._paint && s._paint())); }
   if (window.claude && window.claude.use){
     try { downloads = await window.claude.use('downloads'); } catch(e){ downloads = null; }
   }
