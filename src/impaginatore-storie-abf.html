@@ -301,9 +301,12 @@ Apriamo *2 posti* per accedere ai nostri Percorsi Avanzati!
 <div class="modal open" id="gate" style="background:var(--bg)"><div class="box" style="max-width:380px;text-align:center">
   <div class="logo" style="justify-content:center;border:0;padding-bottom:6px"><div class="wordmark"><div class="n" style="font-size:26px">Asia Baldoni</div><div class="f">fitness</div></div><span class="badge">STORIE</span></div>
   <p class="hint" id="gate-hint">Inserisci il codice di accesso.</p>
-  <form id="gate-form" style="display:flex;gap:8px;justify-content:center">
-    <input id="gate-pin" type="password" autocomplete="current-password" placeholder="Codice" style="border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;background:var(--bg);width:190px;text-align:center;letter-spacing:.12em;font-size:17px">
-    <button class="btn primary" type="submit" id="gate-btn">Entra</button>
+  <form id="gate-form" style="display:flex;flex-direction:column;gap:8px;align-items:center">
+    <input id="gate-email" type="email" autocomplete="username" placeholder="La tua email" hidden style="border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;background:var(--bg);width:250px;text-align:center;font-size:15px">
+    <div style="display:flex;gap:8px;justify-content:center">
+      <input id="gate-pin" type="password" autocomplete="current-password" placeholder="Codice" style="border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;background:var(--bg);width:190px;text-align:center;letter-spacing:.12em;font-size:17px">
+      <button class="btn primary" type="submit" id="gate-btn">Entra</button>
+    </div>
   </form>
   <p class="hint" id="gate-err" style="color:var(--rosa-ink);margin-top:10px;min-height:1.2em"></p>
 </div></div>
@@ -352,7 +355,7 @@ function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(
 
 /* ---------- state ---------- */
 let cloud = false, sb = null;   // cloud = archivio condiviso Supabase; altrimenti locale (IndexedDB)
-const BUCKET = 'photos';
+let BUCKET = 'photos';          // sovrascritto dalla configurazione del gate (CFG.bucket)
 const photos = new Map();   // id -> {id, blob|path, url, img, added, used}
 let stories = [];           // {id, text, photoId, x, y, size, style}
 let currentId = null;
@@ -894,9 +897,10 @@ let rT = null; window.addEventListener('resize', () => { clearTimeout(rT); rT = 
 
 /* ---------- boot (chiamato dal gate dopo il login) ---------- */
 let started = false;
-window.__abfStart = async (mode, client) => {
+window.__abfStart = async (mode, client, cfg) => {
   if (started) return; started = true;
   cloud = mode === 'cloud'; sb = client || null;
+  if (cfg && cfg.bucket) BUCKET = cfg.bucket;
   $('#mode-label').textContent = cloud ? 'Archivio condiviso attivo' : 'Archivio locale (solo questo dispositivo)';
   $('#btn-logout').hidden = !cloud;
   if (cloud) $('#drop').textContent = 'Trascina qui le foto, oppure tocca per sceglierle dal telefono. Finiscono nell\'archivio condiviso: le vede chiunque entri col codice.';
@@ -919,16 +923,47 @@ window.__abfStart = async (mode, client) => {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (() => {
-  // Accesso: account condiviso Supabase (chi ha la password vede foto e storico di tutti).
-  // Se il cloud non è raggiungibile (es. dentro l'artifact Claude), si ripiega sul PIN locale.
-  const CFG = {url: 'https://mtcauaazprruxngbcspu.supabase.co', key: 'sb_publishable_JJGyCBt206j0pn-kDQD7LQ_TiwQQCp3', email: 'storie@metodoabf.app'};
+  // ── Configurazione dell'accesso ────────────────────────────────────────────
+  // Oggi (progetto personale): un account condiviso, chi ha la password vede tutto.
+  // Su ABF: azzerare `sharedEmail` (il gate chiede email + password del CRM),
+  // impostare `schema` allo schema dedicato, `bucket` al bucket dedicato e
+  // `accessTable` alla tabella delle autorizzazioni. Nessun'altra modifica al codice.
+  // Vedi HANDOVER/auth.md e supabase/migrations/202609071500_abf_schema_dedicato_e_access.sql
+  const CFG = {
+    url: 'https://mtcauaazprruxngbcspu.supabase.co',
+    key: 'sb_publishable_JJGyCBt206j0pn-kDQD7LQ_TiwQQCp3',
+    sharedEmail: 'storie@metodoabf.app',  // null su ABF: si entra col proprio account
+    schema: 'public',                     // 'storie' su ABF
+    bucket: 'photos',                     // 'storie-photos' su ABF
+    accessTable: null,                    // 'access' su ABF: chi non è in tabella viene respinto
+    blockedRoles: ['client']              // ruoli sempre respinti
+  };
   const HASH = '089d63e66858a269b91a5d1575f7a015dab7b06ed6b0d629c36304237d4e76e9';
   const gate = document.getElementById('gate'), form = document.getElementById('gate-form'), pin = document.getElementById('gate-pin'), err = document.getElementById('gate-err'), hint = document.getElementById('gate-hint'), btn = document.getElementById('gate-btn');
+  const email = document.getElementById('gate-email');
+  if (!CFG.sharedEmail) email.hidden = false;
   let client = null;
-  try { if (window.supabase) client = window.supabase.createClient(CFG.url, CFG.key); } catch(e){ client = null; }
+  try { if (window.supabase) client = window.supabase.createClient(CFG.url, CFG.key, CFG.schema && CFG.schema !== 'public' ? {db: {schema: CFG.schema}} : undefined); } catch(e){ client = null; }
   let mode = client ? 'cloud' : 'local';
   const open = () => { gate.classList.remove('open'); };
-  const start = (m, c) => { open(); window.__abfStart(m, c); };
+  const start = (m, c) => { open(); window.__abfStart(m, c, CFG); };
+  // Su ABF: solo chi è in tabella delle autorizzazioni entra; i ruoli bloccati mai.
+  async function checkAccess(c){
+    if (!CFG.accessTable) return {ok: true};
+    const {data: {user} = {}} = await c.auth.getUser();
+    if (!user) return {ok: false, msg: 'Sessione non valida, riprova.'};
+    const {data, error} = await c.from(CFG.accessTable).select('role').eq('user_id', user.id).maybeSingle();
+    if (error) return {ok: false, msg: 'Non riesco a verificare le autorizzazioni. Riprova o avvisa chi amministra lo strumento.'};
+    if (!data) return {ok: false, msg: 'Il tuo account non è abilitato a questo strumento. Chiedi di essere aggiunto.'};
+    if ((CFG.blockedRoles || []).includes(data.role)) return {ok: false, msg: 'Strumento riservato al team.'};
+    return {ok: true};
+  }
+  async function enter(c){
+    const a = await checkAccess(c);
+    if (a.ok){ start('cloud', c); return true; }
+    await c.auth.signOut().catch(() => {});
+    err.textContent = a.msg; return false;
+  }
   async function sha(s){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
   function localMode(msg){
     mode = 'local'; hint.textContent = msg || 'Inserisci il codice di accesso.';
@@ -939,10 +974,12 @@ window.__abfStart = async (mode, client) => {
     btn.disabled = true;
     if (mode === 'cloud'){
       try {
-        const {error} = await client.auth.signInWithPassword({email: CFG.email, password: v});
-        if (!error){ start('cloud', client); return; }
+        const who = CFG.sharedEmail || email.value.trim();
+        if (!who){ err.textContent = 'Inserisci la tua email.'; email.focus(); btn.disabled = false; return; }
+        const {error} = await client.auth.signInWithPassword({email: who, password: v});
+        if (!error){ await enter(client); return; }
         if (/fetch|network/i.test(error.message || '')) throw error;
-        err.textContent = 'Codice non valido.'; pin.select();
+        err.textContent = CFG.sharedEmail ? 'Codice non valido.' : 'Email o password non validi.'; pin.select();
       } catch(ex){
         // rete/CSP: cloud non raggiungibile da qui, ripiego locale col PIN
         localMode('Archivio condiviso non raggiungibile da qui: modalità locale. Inserisci il codice.');
@@ -956,8 +993,8 @@ window.__abfStart = async (mode, client) => {
     if (h === HASH){ try { localStorage.setItem('abf-gate', '1'); } catch(e2){} start('local', null); } else { err.textContent = 'Codice non valido.'; pin.select(); }
   });
   if (client){
-    hint.textContent = 'Inserisci il codice di accesso all\'archivio condiviso.';
-    client.auth.getSession().then(({data}) => { if (data && data.session) start('cloud', client); }).catch(() => localMode());
+    hint.textContent = CFG.sharedEmail ? 'Inserisci il codice di accesso all\'archivio condiviso.' : 'Entra con il tuo account.';
+    client.auth.getSession().then(({data}) => { if (data && data.session) enter(client); }).catch(() => localMode());
   } else localMode();
 })();
 </script>

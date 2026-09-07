@@ -10,12 +10,14 @@ tags: [stories, instagram, tool, automazione, asia-baldoni]
 
 Tool web per [[Asia Baldoni]]: incolla il copy delle stories, il testo viene spezzato per frasi e impaginato in automatico sulle foto della sua libreria, in riquadri bianchi stile Instagram (lo stesso look che oggi fa a mano, riga per riga, con parole evidenziate in rosa). Sposta il testo trascinandolo, cambia foto da una griglia, scarica le immagini 1080×1920 pronte da pubblicare.
 
-**Link per Asia (sito pubblico con PIN):** https://giulioat.github.io/storie-abf/ · codice di accesso `398876` (repo GitHub `Giulioat/storie-abf`, GitHub Pages).
+**Link per Asia:** https://giulioat.github.io/storie-abf/ (repo GitHub `Giulioat/storie-abf`, GitHub Pages).
+**Codice di accesso** = password dell'utente Supabase condiviso `storie@metodoabf.app` (scelta da Giulio il 07/09/2026, non scritta qui). Il vecchio PIN numerico `398876` resta solo come ripiego quando il cloud è irraggiungibile (es. dentro l'artifact Claude).
 **Link Claude (artifact privato, stesso file):** https://claude.ai/code/artifact/6c898fb3-ec70-4fcd-ab5b-45bd8ddbc3f7
 **Sorgente unico:** `impaginatore-storie-abf.html` in questa cartella (vanilla JS + Canvas, nessuna libreria). Dopo ogni modifica: `./build-site.sh` rigenera `~/Documents/storie-abf-site/index.html` e pusha sul repo; l'artifact si ripubblica dallo stesso path.
 
-> [!info] PIN
-> Barriera leggera lato client (hash SHA-256 nel sorgente), sufficiente per tenere fuori i curiosi. Nessun dato passa dal sito: foto e storico restano nel browser del dispositivo. Per cambiare PIN: nuovo hash SHA-256 nella costante `HASH` del blocco gate.
+> [!info] Accesso
+> In modalità cloud l'accesso è un vero login Supabase: senza password il database rifiuta ogni richiesta (RLS). Per cambiare il codice: Authentication → Users → reset password dell'utente condiviso, nessuna modifica al codice sorgente.
+> Il PIN di ripiego (hash SHA-256 nella costante `HASH`) è una barriera leggera lato client, vale solo in modalità locale.
 
 ## Origine
 
@@ -31,6 +33,10 @@ Replica per ABF del tool mostrato da Leonardo Distaso nel reel https://www.insta
 
 6. **Reference (richiesta di Giulio 07/09)**: sezione con le **5 sequenze di stories con più risposte**, dai dati Instagram Graph API già raccolti dalla routine [[abf-stories-daily-routine]] (`Intelligence/market/abf-stories/data/*.json`). Lo script `build-top-stories.py` unisce tutte le catture (per ogni story id tiene la cattura con più risposte), raggruppa in sequenze (stesso giorno locale, gap ≤ 3h tra una storia e la successiva), ordina per risposte totali e scrive `~/Documents/storie-abf-site/top/top-stories.json` + thumbnail (frame a 1s per i video). Il tool legge quel JSON dallo stesso sito: per ogni sequenza mostra data, orario, numero storie, risposte totali, reach max e la striscia di thumbnail con risposte e orario, cliccabili a schermo intero. **Aggiornamento automatico**: step 7 del task schedulato `abf-stories-daily-pull` (12:00, fallback 17:00) rilancia script + `build-site.sh` ogni giorno. Il token Meta non entra mai nella pagina: gira solo nella routine locale. Sull'artifact Claude la sezione non ha dati (fetch relativo non disponibile) e lo dice; sul sito GitHub Pages funziona.
 
+7. **Archivio condiviso (richiesta di Giulio 07/09, sera)**: foto e storico non vivono più solo nel browser ma in un progetto Supabase (`mtcauaazprruxngbcspu`, creato da Giulio; URL e chiave pubblica `anon` nel sorgente, sezione `CFG`). Accesso con **un account condiviso**: chi ha la password (= il codice) vede lo stesso archivio da qualsiasi dispositivo. Schema in `supabase-schema.sql` (tabelle `photos`, `layouts`, bucket privato `photos`, regole "solo utenti loggati"). Foto caricate nel bucket e lette con URL firmati (12h, `crossOrigin` per il canvas); storico in `layouts` come JSON, upsert a ogni modifica, ricaricato quando la pagina torna visibile. Se il cloud non è raggiungibile (artifact Claude, CSP) la pagina ripiega su PIN + archivio locale. Al primo accesso cloud da un dispositivo con foto locali compare il bottone "Portale nel cloud condiviso" (migrazione + svuotamento locale). Bottone "Esci" in sidebar. **Fatto il 07/09/2026**: schema eseguito (tabelle `photos` e `layouts`, bucket privato `photos`, 6 policy RLS verificate) e utente condiviso creato e confermato. L'archivio condiviso è operativo. Password del database Supabase resettata lo stesso giorno per sicurezza.
+
+8. **Passaggio di consegne**: `HANDOFF.md` (copiato come README del repo `Giulioat/storie-abf`, che ora contiene anche `src/` con tutti i sorgenti). Spiega hosting, Supabase, routine dati Instagram, accessi da concedere, dominio, come modificare.
+
 ## Font e stile
 
 **UI = stile del CRM ABF** (sales.metodoabf.app, screenshot forniti da Giulio il 07/09/2026): sidebar bianca a sinistra con wordmark Didone "Asia Baldoni / fitness" (Bodoni Moda) e badge STORIE, nav con stato attivo menta, toggle tema sole/luna/monitor, intestazioni con tile menta + titolo + sottotitolo grigio, card bianche bordo `#d5e3df` raggio 10px, bottoni verde `#217257`, callout `#f0f9f6`, traccia rosa `#faeced`, font Inter. Colori campionati direttamente dagli screenshot, non dalla palette caroselli. Su mobile la sidebar diventa barra in alto.
@@ -39,7 +45,8 @@ Replica per ABF del tool mostrato da Leonardo Distaso nel reel https://www.insta
 
 ## Limiti noti e prossimi passi
 
-- Le foto vivono nel browser del dispositivo: la capability per asset condivisi non è disponibile su questo account. Se Asia usa telefono e Mac deve caricare le foto su entrambi.
+- Login cloud mai provato dal browser: la verifica end-to-end (entrare col codice, caricare una foto, vederla da un secondo dispositivo) è il prossimo passo.
+- La routine Reference gira sul Mac di Giulio: se il progetto passa ad altri, va replicata dove sta il token Meta (vedi HANDOFF.md).
 - Nessun video: solo immagini statiche.
 - Da validare con Asia sul telefono: drag del testo a dito, "Condividi" verso Instagram, dimensione default.
 - Fatto 07/09: sezione Reference con le 5 sequenze top per risposte (punto 6) e bottone **"Usa come base"**: crea una sequenza nuova con lo stesso numero di storie (foto dalla libreria, testo segnaposto), e su ogni card resta la miniatura della storia originale in alto a destra, cliccabile a schermo intero, per copiarne foto, quantità di testo e posizione. Il riferimento viene salvato nello Storico insieme alla sequenza.
