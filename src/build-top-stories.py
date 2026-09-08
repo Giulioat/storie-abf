@@ -5,9 +5,8 @@ Legge le catture giornaliere in Intelligence/market/abf-stories/data/*.json
 (prodotte dal task schedulato abf-stories-daily-pull via Instagram Graph API),
 raggruppa le storie in SEQUENZE (stesso giorno locale, gap <= 3h tra una storia
 e la successiva), ordina per risposte totali e salva le prime 5 in
-~/Documents/storie-abf-site/top/top-stories.json con i thumbnail ridotti.
-
-Poi build-site.sh pusha tutto su GitHub Pages: il tool legge top/top-stories.json.
+<SITE>/top/top-stories.json con i thumbnail ridotti (SITE = clone di tartufoli/abf-storie,
+oppure STORIE_SITE_DIR). Poi push-reference.sh committa e pusha top/: Vercel mette online.
 """
 import json, glob, os, shutil, subprocess, sys
 from datetime import datetime, timezone
@@ -17,7 +16,9 @@ from PIL import Image
 VAULT = os.path.expanduser("~/Second Brain")
 DATA = os.path.join(VAULT, "Intelligence/market/abf-stories/data")
 MEDIA = os.path.join(VAULT, "Intelligence/market/abf-stories/media")
-SITE = os.path.expanduser("~/Documents/storie-abf-site")
+# Destinazione: di default il clone del repo ABF (tartufoli/abf-storie, come chiede il suo README);
+# con STORIE_SITE_DIR si può puntare altrove (es. il sito Pages transitorio).
+SITE = os.path.expanduser(os.environ.get("STORIE_SITE_DIR", "~/Documents/abf-storie"))
 OUT = os.path.join(SITE, "top")
 ROME = ZoneInfo("Europe/Rome")
 TOP_N = 5
@@ -56,14 +57,14 @@ def find_media(sid, capture_day):
             if os.path.exists(p): return p
     return None
 
-def thumb(src, dst, h=960):
+def thumb(src, dst, h=640):  # O9 audit 07/09: 640 px e qualità 75 bastano per una miniatura da 118 px, circa un terzo del peso
     if src.endswith(".mp4"):
         tmp = dst + ".frame.jpg"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", src, "-frames:v", "1", tmp], check=False)
         if not os.path.exists(tmp): return False
         src = tmp
     try:
-        im = Image.open(src).convert("RGB"); im.thumbnail((h * 9 // 16 + 40, h)); im.save(dst, quality=82)
+        im = Image.open(src).convert("RGB"); im.thumbnail((h * 9 // 16 + 40, h)); im.save(dst, quality=75, optimize=True)
     except Exception as e:
         print("thumb fail", src, e, file=sys.stderr); return False
     finally:
